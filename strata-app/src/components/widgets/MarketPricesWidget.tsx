@@ -35,7 +35,7 @@ function PriceCell({ label, data, loading }: PriceCellProps) {
                 {label}
             </p>
             <div className="flex items-baseline gap-2">
-                <span className="font-mono font-bold text-3xl" data-metric>
+                <span className="font-mono font-bold text-2xl md:text-3xl" data-metric>
                     {data.unit === "$/gal"
                         ? data.price.toFixed(3)
                         : data.price.toFixed(2)

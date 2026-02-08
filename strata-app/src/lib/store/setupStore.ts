@@ -155,20 +155,20 @@ function createDefaultStream(name: string = "Stream 1"): CrudeStream {
 const initialState: SetupState = {
     companyName: "",
     companyType: null,
-    dailyProduction: 10000,
+    dailyProduction: 0,
     productionBasin: "permian_midland",
-    crudeStreams: [createDefaultStream("Stream 1")],
-    apiGravity: 35,
-    sulfurContent: 0.3,
-    refiningCapacity: 50000,
+    crudeStreams: [],
+    apiGravity: 0,
+    sulfurContent: 0,
+    refiningCapacity: 0,
     nelsonComplexity: "moderate",
-    crudePreferences: ["light-sweet"],
+    crudePreferences: [],
     primaryBenchmark: "WTI",
     qualityDifferential: "",
     storageCapacity: 0,
     alertChannels: ["email"],
     errors: {},
-    crudeClassification: classifyCrude(35, 0.3),
+    crudeClassification: null,
 };
 
 // Helper to recalculate weighted averages

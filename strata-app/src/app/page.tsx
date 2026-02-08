@@ -124,19 +124,13 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 md:gap-8 mt-6 md:mt-8 pt-6 md:pt-8 border-t-2 border-gray-200">
-              <div>
-                <p className="text-xl md:text-3xl font-bold font-mono">$2.8B+</p>
-                <p className="text-[10px] md:text-xs uppercase tracking-wider text-concrete-gray">Crude Analyzed Daily</p>
-              </div>
-              <div>
-                <p className="text-xl md:text-3xl font-bold font-mono">47</p>
-                <p className="text-[10px] md:text-xs uppercase tracking-wider text-concrete-gray">Active Producers</p>
-              </div>
-              <div>
-                <p className="text-xl md:text-3xl font-bold font-mono">$3.50</p>
-                <p className="text-[10px] md:text-xs uppercase tracking-wider text-concrete-gray">Avg. Value/bbl</p>
-              </div>
+            <div className="mt-8 pt-8 border-t-2 border-gray-200">
+              <p className="text-sm md:text-base text-concrete-gray italic">
+                &quot;Strata gives us the visibility we need to make confident hedging decisions.&quot;
+              </p>
+              <p className="text-xs font-bold uppercase tracking-wider mt-2">
+                — Independent Permian Producer
+              </p>
             </div>
           </div>
 
@@ -330,7 +324,7 @@ export default function LandingPage() {
             Stop Leaving Money on the Table
           </h2>
           <p className="text-base md:text-xl mb-6 md:mb-8">
-            Join producers who are capturing an average of $3.50/bbl more
+            Join producers who are maximizing value from every barrel
             through intelligent trading decisions.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4">

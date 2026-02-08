@@ -18,11 +18,17 @@ const navItems: NavItem[] = [
     { label: "SETTINGS", href: "/setup", icon: "⚙" },
 ];
 
+interface SidebarProps {
+    mobileOpen?: boolean;
+    onMobileClose?: () => void;
+}
+
 /**
  * Sidebar Component - Industrial Brutalism Style
  * Collapsible: 64px (icons only) ↔ 240px (full labels)
+ * Responsive: Hidden on mobile, shown as overlay when mobileOpen is true
  */
-export function Sidebar() {
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
     const pathname = usePathname();
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -40,26 +46,33 @@ export function Sidebar() {
         localStorage.setItem("sidebar-expanded", String(newState));
     };
 
+    // Close mobile menu when navigating
+    const handleNavClick = () => {
+        if (onMobileClose) {
+            onMobileClose();
+        }
+    };
+
     return (
         <aside
-            className={`fixed left-0 top-0 h-screen bg-white border-r-2 border-black flex flex-col z-50 transition-all duration-200 ${isExpanded ? "w-sidebar" : "w-16"
-                }`}
+            className={`fixed left-0 top-0 h-screen bg-white border-r-2 border-black flex flex-col z-50 transition-all duration-200
+                ${isExpanded ? "w-sidebar" : "w-16"}
+                ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+                md:translate-x-0
+            `}
         >
             {/* Logo Section */}
             <div className="border-b-2 border-black p-4">
-                <div className="flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <div className="w-8 h-8 bg-black flex items-center justify-center flex-shrink-0">
                         <span className="text-white font-mono font-bold text-lg">S</span>
                     </div>
                     {isExpanded && (
                         <div className="overflow-hidden">
                             <h1 className="font-mono font-bold text-xl tracking-tighter">STRATA</h1>
-                            <p className="text-[10px] uppercase tracking-widest text-concrete-gray">
-                                OIL TRADING INTEL
-                            </p>
                         </div>
                     )}
-                </div>
+                </Link>
             </div>
 
             {/* Navigation Links */}

@@ -5,12 +5,13 @@ import { useState, useEffect } from "react";
 
 /**
  * TopBar Component - Fixed header with company info and status
- * Responsive to sidebar collapsed/expanded state
+ * Responsive to sidebar collapsed/expanded state and mobile screens
  */
 export function TopBar() {
     const store = useSetupStore();
     const hasSetup = store.companyName && store.companyType;
     const [sidebarExpanded, setSidebarExpanded] = useState(true);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Listen for sidebar state changes
     useEffect(() => {
@@ -24,7 +25,18 @@ export function TopBar() {
             const current = localStorage.getItem("sidebar-expanded");
             setSidebarExpanded(current === "true");
         }, 100);
-        return () => clearInterval(interval);
+
+        // Listen for mobile menu close events
+        const handleMobileMenuChange = (e: CustomEvent) => {
+            setMobileMenuOpen(e.detail);
+        };
+
+        window.addEventListener("mobileMenuToggle" as any, handleMobileMenuChange as any);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener("mobileMenuToggle" as any, handleMobileMenuChange as any);
+        };
     }, []);
 
     const getCompanyTypeBadge = () => {
@@ -34,39 +46,63 @@ export function TopBar() {
         return `${crudeLabel} ${typeLabel}`;
     };
 
+    const toggleMobileMenu = () => {
+        const newState = !mobileMenuOpen;
+        setMobileMenuOpen(newState);
+        window.dispatchEvent(new CustomEvent("mobileMenuToggle", { detail: newState }));
+    };
+
     return (
         <header
-            className="fixed top-0 right-0 h-topbar bg-black text-white z-40 flex items-center justify-between px-6 border-b-2 border-black transition-all duration-200"
-            style={{ left: sidebarExpanded ? 240 : 64 }}
+            className={`
+                fixed top-0 right-0 h-topbar bg-black text-white z-40 flex items-center justify-between px-4 md:px-6 border-b-2 border-black transition-all duration-200
+                left-0
+                ${sidebarExpanded ? 'md:left-[240px]' : 'md:left-[64px]'}
+            `}
         >
-            {/* Left: Title */}
-            <div className="flex items-center gap-4">
-                <h1 className="font-semibold uppercase tracking-wider text-sm">
-                    Trading Intelligence
+            {/* Mobile: Hamburger Menu */}
+            <button
+                className="md:hidden p-2 -ml-2 hover:bg-gray-800 transition-colors"
+                onClick={toggleMobileMenu}
+                aria-label="Toggle menu"
+            >
+                <div className="w-5 h-4 flex flex-col justify-between">
+                    <span className={`block h-0.5 bg-white transition-all duration-200 ${mobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
+                    <span className={`block h-0.5 bg-white transition-all duration-200 ${mobileMenuOpen ? 'opacity-0' : ''}`} />
+                    <span className={`block h-0.5 bg-white transition-all duration-200 ${mobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
+                </div>
+            </button>
+
+            {/* Left: Title - Simplified on mobile */}
+            <div className="flex items-center gap-2 md:gap-4">
+                <h1 className="font-semibold uppercase tracking-wider text-xs md:text-sm">
+                    <span className="hidden sm:inline">Trading Intelligence</span>
+                    <span className="sm:hidden">STRATA</span>
                 </h1>
-                <span className="text-concrete-gray">|</span>
-                <span className="text-concrete-gray uppercase text-xs tracking-wider">
+                <span className="hidden md:inline text-concrete-gray">|</span>
+                <span className="hidden md:inline text-concrete-gray uppercase text-xs tracking-wider">
                     Real-Time Market Analysis
                 </span>
             </div>
 
-            {/* Center: Live Indicator */}
-            <div className="flex items-center gap-2 px-3 py-1 border border-forest-green">
+            {/* Center: Live Indicator - Hidden on smallest screens */}
+            <div className="hidden sm:flex items-center gap-2 px-2 md:px-3 py-1 border border-forest-green">
                 <div className="w-2 h-2 bg-forest-green animate-pulse-subtle" />
-                <span className="text-xs uppercase tracking-wider text-forest-green font-semibold">
-                    Markets Open
+                <span className="text-[10px] md:text-xs uppercase tracking-wider text-forest-green font-semibold">
+                    <span className="hidden md:inline">Markets Open</span>
+                    <span className="md:hidden">LIVE</span>
                 </span>
             </div>
 
-            {/* Right: Company Info + Time */}
-            <div className="flex items-center gap-4">
-                <span className="font-mono text-sm">
+            {/* Right: Company Info + Time - Simplified on mobile */}
+            <div className="flex items-center gap-2 md:gap-4">
+                <span className="font-mono text-xs md:text-sm">
                     {new Date().toLocaleTimeString("en-US", { hour12: false })}
                 </span>
-                <span className="text-concrete-gray">CST</span>
+                <span className="hidden sm:inline text-concrete-gray text-xs">CST</span>
 
                 {hasSetup && (
-                    <div className="flex items-center gap-3 pl-4 border-l border-gray-600">
+                    <div className="hidden lg:flex items-center gap-3 pl-4 border-l border-gray-600">
                         <span className="text-sm font-semibold uppercase tracking-wider">
                             {store.companyName}
                         </span>

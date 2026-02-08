@@ -28,18 +28,27 @@ export function YourCrudeValueWidget() {
     const store = useSetupStore();
     const { data: marketData } = useSWR<MarketDataResponse>("/api/market", fetchMarketPrices);
 
-    const wtiPrice = marketData?.prices?.wti?.price || 80;
+    const wtiPrice = marketData?.prices?.wti?.price;
     const wtiChange = marketData?.prices?.wti?.change || 0;
 
     // Calculate quality differential
     // Light premium: (API - 30) × $0.50/degree
     // Sweet premium: (0.5 - Sulfur%) × $10/point
-    const lightPremium = (store.apiGravity - 30) * 0.5;
-    const sweetPremium = (0.5 - store.sulfurContent) * 10;
-    const totalDifferential = lightPremium + sweetPremium;
-    const yourCrudePrice = wtiPrice + totalDifferential;
-    const totalChange = wtiChange; // Differential doesn't change daily
+    const hasUserSpecs = store.apiGravity > 0 || store.sulfurContent > 0;
 
+    let yourCrudePrice: number | null = null;
+    let totalDifferential = 0;
+
+    if (wtiPrice && hasUserSpecs) {
+        const lightPremium = (store.apiGravity - 30) * 0.5;
+        const sweetPremium = (0.5 - store.sulfurContent) * 10;
+        totalDifferential = lightPremium + sweetPremium;
+        yourCrudePrice = wtiPrice + totalDifferential;
+    } else if (wtiPrice) {
+        yourCrudePrice = wtiPrice;
+    }
+
+    const totalChange = wtiChange; // Differential doesn't change daily
     const isPositiveChange = totalChange >= 0;
 
     return (
@@ -62,10 +71,10 @@ export function YourCrudeValueWidget() {
             </CardHeader>
 
             <div className="px-6 pb-6 flex-1 flex flex-col justify-center">
-                {/* Hero Price - 96px */}
+                {/* Hero Price - Responsive Text Size */}
                 <div className="flex items-baseline gap-2">
-                    <span className="font-mono font-bold text-metric-xl leading-none" data-metric>
-                        ${yourCrudePrice.toFixed(2)}
+                    <span className="font-mono font-bold text-4xl sm:text-6xl md:text-metric-xl leading-none" data-metric>
+                        {yourCrudePrice !== null ? `$${yourCrudePrice.toFixed(2)}` : "--.--"}
                     </span>
                     <span className="font-mono text-2xl text-concrete-gray">/bbl</span>
                 </div>
@@ -82,7 +91,7 @@ export function YourCrudeValueWidget() {
                 {/* Breakdown */}
                 <div className="mt-4 pt-4 border-t-2 border-black">
                     <p className="text-sm text-concrete-gray">
-                        WTI <span className="font-mono font-semibold text-black">${wtiPrice.toFixed(2)}</span>
+                        WTI <span className="font-mono font-semibold text-black">{wtiPrice ? `$${wtiPrice.toFixed(2)}` : "--.--"}</span>
                         {" "}
                         <span className={`font-mono font-semibold ${totalDifferential >= 0 ? "text-forest-green" : "text-safety-red"}`}>
                             {totalDifferential >= 0 ? "+" : "-"}${Math.abs(totalDifferential).toFixed(2)} quality premium
@@ -265,15 +274,15 @@ export function ProductionMetricsWidget() {
 
     return (
         <Card padding="none" className="w-full">
-            {/* Top Row: Key Metrics */}
-            <div className="flex items-stretch divide-x divide-gray-200 border-b border-gray-200">
+            {/* Top Row: Key Metrics - Responsive Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-gray-200 divide-y divide-gray-200 lg:divide-y-0 lg:divide-x">
                 {/* Daily Production */}
                 {showProduction && (
-                    <div className="flex-1 p-4 text-center">
+                    <div className="p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
                             Daily Production
                         </p>
-                        <p className="font-mono text-2xl font-bold text-forest-green">
+                        <p className="font-mono text-xl md:text-2xl font-bold text-forest-green">
                             {store.dailyProduction.toLocaleString()}
                         </p>
                         <p className="text-xs text-concrete-gray">BPD</p>
@@ -282,14 +291,14 @@ export function ProductionMetricsWidget() {
 
                 {/* Blended Specs (Weighted Average) */}
                 {showProduction && (
-                    <div className="flex-1 p-4 text-center">
+                    <div className="p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
                             {hasMultipleStreams ? "Blended Specs" : "Crude Specs"}
                         </p>
                         <div className="flex justify-center items-baseline gap-2">
-                            <span className="font-mono text-xl font-bold">{store.apiGravity}°</span>
+                            <span className="font-mono text-lg md:text-xl font-bold">{store.apiGravity}°</span>
                             <span className="text-concrete-gray">/</span>
-                            <span className="font-mono text-xl font-bold">{store.sulfurContent.toFixed(2)}%</span>
+                            <span className="font-mono text-lg md:text-xl font-bold">{store.sulfurContent.toFixed(2)}%</span>
                         </div>
                         <p className="text-xs text-concrete-gray">API / Sulfur</p>
                     </div>
@@ -297,7 +306,7 @@ export function ProductionMetricsWidget() {
 
                 {/* Classification */}
                 {store.crudeClassification && showProduction && (
-                    <div className="flex-1 p-4 text-center">
+                    <div className="p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
                             Classification
                         </p>
@@ -315,11 +324,11 @@ export function ProductionMetricsWidget() {
 
                 {/* Refining Capacity */}
                 {showRefining && (
-                    <div className="flex-1 p-4 text-center">
+                    <div className="p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
                             Refining Capacity
                         </p>
-                        <p className="font-mono text-2xl font-bold text-signal-amber">
+                        <p className="font-mono text-xl md:text-2xl font-bold text-signal-amber">
                             {store.refiningCapacity.toLocaleString()}
                         </p>
                         <p className="text-xs text-concrete-gray">BPD</p>
@@ -328,11 +337,11 @@ export function ProductionMetricsWidget() {
 
                 {/* Utilization (for Integrated) */}
                 {utilization !== null && (
-                    <div className="flex-1 p-4 text-center">
+                    <div className="p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
                             Utilization
                         </p>
-                        <p className={`font-mono text-2xl font-bold ${utilization >= 80 ? "text-forest-green" : utilization >= 50 ? "text-signal-amber" : "text-safety-red"}`}>
+                        <p className={`font-mono text-xl md:text-2xl font-bold ${utilization >= 80 ? "text-forest-green" : utilization >= 50 ? "text-signal-amber" : "text-safety-red"}`}>
                             {utilization.toFixed(0)}%
                         </p>
                         <div className="w-full h-1.5 bg-gray-200 mt-1">
@@ -345,11 +354,11 @@ export function ProductionMetricsWidget() {
                 )}
 
                 {/* Benchmark */}
-                <div className="flex-1 p-4 text-center">
+                <div className="p-4 text-center">
                     <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
                         Benchmark
                     </p>
-                    <p className="font-mono text-2xl font-bold">
+                    <p className="font-mono text-xl md:text-2xl font-bold">
                         {store.primaryBenchmark}
                     </p>
                     <p className="text-xs text-concrete-gray">Primary Index</p>
