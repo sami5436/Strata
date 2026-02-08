@@ -5,7 +5,7 @@ import { HTMLAttributes, forwardRef } from "react";
 interface SelectionCardProps extends HTMLAttributes<HTMLButtonElement> {
     title: string;
     description: string;
-    icon: string;
+    icon?: string;
     selected: boolean;
     onSelect: () => void;
     error?: boolean;
@@ -35,9 +35,11 @@ export const SelectionCard = forwardRef<HTMLButtonElement, SelectionCardProps>(
                 {...props}
             >
                 <div className="flex items-start gap-3">
-                    <span className={`text-2xl ${selected ? "text-white" : "text-black"}`}>
-                        {icon}
-                    </span>
+                    {icon && (
+                        <span className={`text-2xl ${selected ? "text-white" : "text-black"}`}>
+                            {icon}
+                        </span>
+                    )}
                     <div>
                         <h4 className="font-bold uppercase tracking-wider text-sm">
                             {title}

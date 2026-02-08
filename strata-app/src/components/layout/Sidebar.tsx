@@ -12,16 +12,14 @@ interface NavItem {
 const navItems: NavItem[] = [
     { label: "DASHBOARD", href: "/dashboard", icon: "◉" },
     { label: "OPPORTUNITIES", href: "/opportunities", icon: "◆" },
-    { label: "MARKET", href: "/market", icon: "▤" },
-    { label: "CALCULATORS", href: "/calculators", icon: "⊞" },
+    { label: "MARKET INTEL", href: "/market", icon: "▤" },
     { label: "ALERTS", href: "/alerts", icon: "⚠" },
-    { label: "SETUP", href: "/setup", icon: "⚙" },
+    { label: "SETTINGS", href: "/setup", icon: "⚙" },
 ];
 
 /**
  * Sidebar Component - Industrial Brutalism Style
  * 240px fixed width, left side navigation
- * Black border right, clear visual hierarchy
  */
 export function Sidebar() {
     const pathname = usePathname();
@@ -47,7 +45,8 @@ export function Sidebar() {
             <nav className="flex-1 py-4">
                 <ul className="space-y-1">
                     {navItems.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href ||
+                            (item.href === "/dashboard" && pathname === "/");
                         return (
                             <li key={item.href}>
                                 <Link
@@ -80,7 +79,7 @@ export function Sidebar() {
                     </span>
                 </div>
                 <p className="text-[10px] text-concrete-gray mt-1 font-mono">
-                    LAST UPDATE: 14:32:15
+                    LAST UPDATE: {new Date().toLocaleTimeString("en-US", { hour12: false })}
                 </p>
             </div>
         </aside>

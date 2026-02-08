@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MainLayout } from "@/components/layout";
 import {
@@ -19,59 +20,58 @@ import {
     CompanyType,
     NelsonComplexity,
     Benchmark,
-    CrudePreference,
-    AlertChannel,
 } from "@/lib/store";
+
+type DataSource = "manual" | "weatherford" | "scada" | "enverus";
 
 /**
  * Setup Page - Company Profile Configuration
- * Single page with 4 sections, conditional visibility
+ * One-at-a-time reveal with Previous button navigation
  */
 export default function SetupPage() {
     const router = useRouter();
     const store = useSetupStore();
+    const [dataSource, setDataSource] = useState<DataSource | null>(null);
+    const [currentStep, setCurrentStep] = useState(1);
 
-    // Show production section for Producer or Integrated
+    // Determine which sections are needed
     const showProduction = store.companyType === "producer" || store.companyType === "integrated";
-
-    // Show refining section for Refiner or Integrated
     const showRefining = store.companyType === "refiner" || store.companyType === "integrated";
+
+    // Calculate total steps
+    const needsDataSource = showProduction || showRefining;
+    const totalSteps = 1 + (needsDataSource ? 1 : 0) + (showProduction ? 1 : 0) + (showRefining ? 1 : 0) + 1;
+
+    // Can proceed checks for each step
+    const canProceedStep1 = !!(store.companyName && store.companyType);
+    const canProceedStep2 = dataSource === "manual";
+    const canProceedStep3 = store.dailyProduction > 0;
+    const canProceedStep4 = store.refiningCapacity > 0;
+
+    const handleNext = () => {
+        if (currentStep < totalSteps) {
+            setCurrentStep(currentStep + 1);
+        }
+    };
+
+    const handlePrevious = () => {
+        if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+        }
+    };
 
     const handleSubmit = () => {
         if (store.validate()) {
             console.log("=== STRATA SETUP COMPLETE ===");
-            console.log({
-                company: {
-                    name: store.companyName,
-                    type: store.companyType,
-                },
-                production: showProduction ? {
-                    dailyVolume: store.dailyProduction,
-                    apiGravity: store.apiGravity,
-                    sulfurContent: store.sulfurContent,
-                    classification: store.crudeClassification,
-                } : null,
-                refining: showRefining ? {
-                    capacity: store.refiningCapacity,
-                    complexity: store.nelsonComplexity,
-                    preferences: store.crudePreferences,
-                } : null,
-                market: {
-                    benchmark: store.primaryBenchmark,
-                    differential: store.qualityDifferential,
-                    storage: store.storageCapacity,
-                    alerts: store.alertChannels,
-                },
-            });
-            router.push("/");
+            router.push("/dashboard");
         }
     };
 
-    const companyTypes: { type: CompanyType; title: string; description: string; icon: string }[] = [
-        { type: "producer", title: "Producer", description: "We produce crude oil", icon: "⛽" },
-        { type: "refiner", title: "Refiner", description: "We buy crude and refine it", icon: "🏭" },
-        { type: "integrated", title: "Integrated", description: "We do both", icon: "◈" },
-        { type: "trader", title: "Trader", description: "We trade without assets", icon: "📊" },
+    const companyTypes: { type: CompanyType; title: string; description: string }[] = [
+        { type: "producer", title: "Producer", description: "We produce crude oil" },
+        { type: "refiner", title: "Refiner", description: "We buy crude and refine it" },
+        { type: "integrated", title: "Integrated", description: "We do both" },
+        { type: "trader", title: "Trader", description: "We trade without assets" },
     ];
 
     const complexityOptions = [
@@ -87,6 +87,33 @@ export default function SetupPage() {
         { value: "WCS", label: "WCS (Western Canadian Select)" },
     ];
 
+    // Map current step to actual section
+    const getStepContent = () => {
+        let stepIndex = currentStep;
+
+        // Step 1: Company Profile
+        if (stepIndex === 1) return "company";
+
+        // Step 2: Data Source (only if producer/refiner/integrated)
+        if (needsDataSource && stepIndex === 2) return "datasource";
+        if (!needsDataSource && stepIndex === 2) return "market";
+
+        // Adjust for conditional steps
+        let offset = needsDataSource ? 2 : 1;
+
+        if (showProduction && stepIndex === offset + 1) return "production";
+        if (showProduction) offset++;
+
+        if (showRefining && stepIndex === offset + 1) return "refining";
+        if (showRefining) offset++;
+
+        if (stepIndex === offset + 1) return "market";
+
+        return "company";
+    };
+
+    const section = getStepContent();
+
     return (
         <MainLayout>
             {/* Page Header */}
@@ -95,55 +122,141 @@ export default function SetupPage() {
                     Company Setup
                 </h1>
                 <p className="text-concrete-gray uppercase tracking-wider text-sm">
-                    Configure your trading profile — 3 minutes to complete
+                    Step {currentStep} of {totalSteps} — Configure your trading profile
                 </p>
             </div>
 
-            <div className="max-w-4xl space-y-6">
-                {/* ===== SECTION 1: COMPANY PROFILE ===== */}
-                <Card padding="lg">
-                    <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
-                        1. Company Profile
-                    </h2>
-
-                    <div className="space-y-4">
-                        <TextInput
-                            label="Company Name"
-                            value={store.companyName}
-                            onChange={(e) => store.setCompanyName(e.target.value)}
-                            placeholder="Enter company name"
-                            error={store.errors.companyName}
-                        />
-
-                        <div>
-                            <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray block mb-2">
-                                Company Type
-                            </span>
-                            {store.errors.companyType && (
-                                <span className="text-xs text-safety-red mb-2 block">{store.errors.companyType}</span>
-                            )}
-                            <div className="grid grid-cols-2 gap-3">
-                                {companyTypes.map((item) => (
-                                    <SelectionCard
-                                        key={item.type}
-                                        title={item.title}
-                                        description={item.description}
-                                        icon={item.icon}
-                                        selected={store.companyType === item.type}
-                                        onSelect={() => store.setCompanyType(item.type)}
-                                        error={!!store.errors.companyType}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* ===== SECTION 2: PRODUCTION DETAILS ===== */}
-                {showProduction && (
+            <div className="max-w-4xl">
+                {/* ===== COMPANY PROFILE ===== */}
+                {section === "company" && (
                     <Card padding="lg">
                         <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
-                            2. Production Details
+                            Company Profile
+                        </h2>
+
+                        <div className="space-y-4">
+                            <TextInput
+                                label="Company Name"
+                                value={store.companyName}
+                                onChange={(e) => store.setCompanyName(e.target.value)}
+                                placeholder="Enter company name"
+                                error={store.errors.companyName}
+                            />
+
+                            <div>
+                                <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray block mb-2">
+                                    Company Type
+                                </span>
+                                {store.errors.companyType && (
+                                    <span className="text-xs text-safety-red mb-2 block">{store.errors.companyType}</span>
+                                )}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {companyTypes.map((item) => (
+                                        <SelectionCard
+                                            key={item.type}
+                                            title={item.title}
+                                            description={item.description}
+                                            selected={store.companyType === item.type}
+                                            onSelect={() => store.setCompanyType(item.type)}
+                                            error={!!store.errors.companyType}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-4 pt-6 mt-6 border-t-2 border-black">
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                onClick={handleNext}
+                                disabled={!canProceedStep1}
+                            >
+                                Next →
+                            </Button>
+                        </div>
+                    </Card>
+                )}
+
+                {/* ===== DATA SOURCE ===== */}
+                {section === "datasource" && (
+                    <Card padding="lg">
+                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                            Data Source
+                        </h2>
+                        <p className="text-concrete-gray text-sm mb-4">
+                            Connect your production data or enter manually
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <button
+                                onClick={() => {/* placeholder */ }}
+                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                disabled
+                            >
+                                <p className="font-bold uppercase text-sm">Weatherford</p>
+                                <p className="text-xs text-concrete-gray">Production Optimization</p>
+                                <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
+                            </button>
+                            <button
+                                onClick={() => {/* placeholder */ }}
+                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                disabled
+                            >
+                                <p className="font-bold uppercase text-sm">SCADA System</p>
+                                <p className="text-xs text-concrete-gray">Real-time Field Data</p>
+                                <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
+                            </button>
+                            <button
+                                onClick={() => {/* placeholder */ }}
+                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                disabled
+                            >
+                                <p className="font-bold uppercase text-sm">Enverus</p>
+                                <p className="text-xs text-concrete-gray">Production Analytics</p>
+                                <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
+                            </button>
+                            <button
+                                onClick={() => {/* placeholder */ }}
+                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                disabled
+                            >
+                                <p className="font-bold uppercase text-sm">OFS Portal</p>
+                                <p className="text-xs text-concrete-gray">Oilfield Services Data</p>
+                                <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
+                            </button>
+                        </div>
+
+                        <Button
+                            variant={dataSource === "manual" ? "primary" : "secondary"}
+                            size="lg"
+                            className="w-full mb-6"
+                            onClick={() => setDataSource("manual")}
+                        >
+                            {dataSource === "manual" ? "✓ Manual Entry Selected" : "Enter Data Manually"}
+                        </Button>
+
+                        <div className="flex justify-between gap-4 pt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                                ← Previous
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                onClick={handleNext}
+                                disabled={!canProceedStep2}
+                            >
+                                Next →
+                            </Button>
+                        </div>
+                    </Card>
+                )}
+
+                {/* ===== PRODUCTION DETAILS ===== */}
+                {section === "production" && (
+                    <Card padding="lg">
+                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                            Production Details
                         </h2>
 
                         <div className="space-y-6">
@@ -212,14 +325,28 @@ export default function SetupPage() {
                                 </div>
                             )}
                         </div>
+
+                        <div className="flex justify-between gap-4 pt-6 mt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                                ← Previous
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                onClick={handleNext}
+                                disabled={!canProceedStep3}
+                            >
+                                Next →
+                            </Button>
+                        </div>
                     </Card>
                 )}
 
-                {/* ===== SECTION 3: REFINING CAPABILITIES ===== */}
-                {showRefining && (
+                {/* ===== REFINING CAPABILITIES ===== */}
+                {section === "refining" && (
                     <Card padding="lg">
                         <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
-                            {showProduction ? "3" : "2"}. Refining Capabilities
+                            Refining Capabilities
                         </h2>
 
                         <div className="space-y-4">
@@ -260,69 +387,84 @@ export default function SetupPage() {
                                 />
                             </CheckboxGroup>
                         </div>
+
+                        <div className="flex justify-between gap-4 pt-6 mt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                                ← Previous
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                onClick={handleNext}
+                                disabled={!canProceedStep4}
+                            >
+                                Next →
+                            </Button>
+                        </div>
                     </Card>
                 )}
 
-                {/* ===== SECTION 4: MARKET SETTINGS ===== */}
-                <Card padding="lg">
-                    <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
-                        {showProduction && showRefining ? "4" : showProduction || showRefining ? "3" : "2"}. Market Settings
-                    </h2>
+                {/* ===== MARKET SETTINGS ===== */}
+                {section === "market" && (
+                    <Card padding="lg">
+                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                            Market Settings
+                        </h2>
 
-                    <div className="space-y-4">
-                        <Select
-                            label="Primary Benchmark"
-                            value={store.primaryBenchmark}
-                            onChange={(v) => store.setPrimaryBenchmark(v as Benchmark)}
-                            options={benchmarkOptions}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <TextInput
-                                label="Known Quality Differential (Optional)"
-                                value={store.qualityDifferential}
-                                onChange={(e) => store.setQualityDifferential(e.target.value)}
-                                placeholder="+$2.50/bbl"
+                        <div className="space-y-4">
+                            <Select
+                                label="Primary Benchmark"
+                                value={store.primaryBenchmark}
+                                onChange={(v) => store.setPrimaryBenchmark(v as Benchmark)}
+                                options={benchmarkOptions}
                             />
 
-                            <NumberInput
-                                label="Storage Capacity (Optional)"
-                                value={store.storageCapacity}
-                                onChange={store.setStorageCapacity}
-                                unit="BBL"
-                                min={0}
-                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <TextInput
+                                    label="Known Quality Differential (Optional)"
+                                    value={store.qualityDifferential}
+                                    onChange={(e) => store.setQualityDifferential(e.target.value)}
+                                    placeholder="+$2.50/bbl"
+                                />
+
+                                <NumberInput
+                                    label="Storage Capacity (Optional)"
+                                    value={store.storageCapacity}
+                                    onChange={store.setStorageCapacity}
+                                    unit="BBL"
+                                    min={0}
+                                />
+                            </div>
+
+                            <CheckboxGroup label="Alert Preferences">
+                                <Checkbox
+                                    label="Email"
+                                    checked={store.alertChannels.includes("email")}
+                                    onChange={() => store.toggleAlertChannel("email")}
+                                />
+                                <Checkbox
+                                    label="SMS"
+                                    checked={store.alertChannels.includes("sms")}
+                                    onChange={() => store.toggleAlertChannel("sms")}
+                                />
+                                <Checkbox
+                                    label="Slack"
+                                    checked={store.alertChannels.includes("slack")}
+                                    onChange={() => store.toggleAlertChannel("slack")}
+                                />
+                            </CheckboxGroup>
                         </div>
 
-                        <CheckboxGroup label="Alert Preferences">
-                            <Checkbox
-                                label="Email"
-                                checked={store.alertChannels.includes("email")}
-                                onChange={() => store.toggleAlertChannel("email")}
-                            />
-                            <Checkbox
-                                label="SMS"
-                                checked={store.alertChannels.includes("sms")}
-                                onChange={() => store.toggleAlertChannel("sms")}
-                            />
-                            <Checkbox
-                                label="Slack"
-                                checked={store.alertChannels.includes("slack")}
-                                onChange={() => store.toggleAlertChannel("slack")}
-                            />
-                        </CheckboxGroup>
-                    </div>
-                </Card>
-
-                {/* ===== SUBMIT BUTTON ===== */}
-                <div className="flex justify-end gap-4 pt-4 border-t-2 border-black">
-                    <Button variant="secondary" size="lg" onClick={() => store.reset()}>
-                        Reset Form
-                    </Button>
-                    <Button variant="primary" size="lg" onClick={handleSubmit}>
-                        Complete Setup →
-                    </Button>
-                </div>
+                        <div className="flex justify-between gap-4 pt-6 mt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                                ← Previous
+                            </Button>
+                            <Button variant="primary" size="lg" onClick={handleSubmit}>
+                                Complete Setup →
+                            </Button>
+                        </div>
+                    </Card>
+                )}
             </div>
         </MainLayout>
     );

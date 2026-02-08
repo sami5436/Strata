@@ -1,50 +1,61 @@
+"use client";
+
+import { useSetupStore } from "@/lib/store";
+
 /**
- * TopBar Component - Industrial Brutalism Style
- * Company name placeholder, current time, status indicators
+ * TopBar Component - Fixed header with company info and status
  */
 export function TopBar() {
+    const store = useSetupStore();
+    const hasSetup = store.companyName && store.companyType;
+
+    const getCompanyTypeBadge = () => {
+        if (!store.crudeClassification || !store.companyType) return null;
+        const typeLabel = store.companyType.charAt(0).toUpperCase() + store.companyType.slice(1);
+        const crudeLabel = `${store.crudeClassification.density} ${store.crudeClassification.sulfur}`;
+        return `${crudeLabel} ${typeLabel}`;
+    };
+
     return (
-        <header className="fixed top-0 left-sidebar right-0 h-16 bg-white border-b-2 border-black flex items-center justify-between px-6 z-40">
-            {/* Left: Page title area */}
+        <header className="fixed top-0 left-sidebar right-0 h-topbar bg-black text-white z-40 flex items-center justify-between px-6 border-b-2 border-black">
+            {/* Left: Title */}
             <div className="flex items-center gap-4">
-                <h2 className="text-lg font-bold uppercase tracking-wider">
+                <h1 className="font-semibold uppercase tracking-wider text-sm">
                     Trading Intelligence
-                </h2>
-                <div className="w-px h-6 bg-black" />
-                <span className="text-sm text-concrete-gray uppercase tracking-wider">
+                </h1>
+                <span className="text-concrete-gray">|</span>
+                <span className="text-concrete-gray uppercase text-xs tracking-wider">
                     Real-Time Market Analysis
                 </span>
             </div>
 
-            {/* Right: Company info and status */}
-            <div className="flex items-center gap-6">
-                {/* Market status indicator */}
-                <div className="flex items-center gap-2 border-2 border-black px-3 py-1.5">
-                    <div className="w-2 h-2 bg-forest-green" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                        MARKETS OPEN
-                    </span>
-                </div>
+            {/* Center: Live Indicator */}
+            <div className="flex items-center gap-2 px-3 py-1 border border-forest-green">
+                <div className="w-2 h-2 bg-forest-green animate-pulse-subtle" />
+                <span className="text-xs uppercase tracking-wider text-forest-green font-semibold">
+                    Markets Open
+                </span>
+            </div>
 
-                {/* Time display */}
-                <div className="text-right">
-                    <p className="font-mono text-lg font-bold" data-metric>
-                        14:32:15
-                    </p>
-                    <p className="text-[10px] uppercase tracking-wider text-concrete-gray">
-                        CST
-                    </p>
-                </div>
+            {/* Right: Company Info + Time */}
+            <div className="flex items-center gap-4">
+                <span className="font-mono text-sm">
+                    {new Date().toLocaleTimeString("en-US", { hour12: false })}
+                </span>
+                <span className="text-concrete-gray">CST</span>
 
-                {/* Company placeholder */}
-                <div className="border-l-2 border-black pl-4">
-                    <p className="text-sm font-semibold uppercase tracking-wider">
-                        ACME OIL CO.
-                    </p>
-                    <p className="text-[10px] uppercase tracking-wider text-concrete-gray">
-                        INTEGRATED • 50K BPD
-                    </p>
-                </div>
+                {hasSetup && (
+                    <div className="flex items-center gap-3 pl-4 border-l border-gray-600">
+                        <span className="text-sm font-semibold uppercase tracking-wider">
+                            {store.companyName}
+                        </span>
+                        {getCompanyTypeBadge() && (
+                            <span className="text-xs uppercase tracking-wider px-2 py-1 bg-gray-700 text-white border border-gray-500">
+                                {getCompanyTypeBadge()}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
         </header>
     );

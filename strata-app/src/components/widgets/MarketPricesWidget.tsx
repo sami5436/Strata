@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { Card, CardHeader, CardTitle, PriceIndicator } from "@/components/ui";
+import { Card, CardHeader, CardTitle } from "@/components/ui";
 import { fetchMarketPrices, MarketDataResponse, PriceData } from "@/lib/api";
 
 // 15 minute refresh interval
@@ -94,7 +94,15 @@ export function MarketPricesWidget() {
     return (
         <Card padding="none" className="overflow-hidden">
             <CardHeader className="px-4 pt-4 pb-3 mb-0 border-b-0">
-                <CardTitle>Market Prices</CardTitle>
+                <div className="flex items-center">
+                    <CardTitle>Market Prices</CardTitle>
+                    <span
+                        className="text-concrete-gray hover:text-black cursor-help text-sm ml-1"
+                        title="Live commodity prices from EIA including WTI crude, Brent crude, Gasoline RBOB, and Diesel No. 2. Refreshes every 15 minutes."
+                    >
+                        ⓘ
+                    </span>
+                </div>
                 <div className="flex items-center gap-2">
                     {data?.source === "mock" && (
                         <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 bg-industrial-yellow text-black border border-black">

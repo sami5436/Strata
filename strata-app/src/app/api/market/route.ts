@@ -1,13 +1,5 @@
 import { NextResponse } from "next/server";
 
-// EIA API series IDs for petroleum spot prices
-const SERIES_IDS = {
-    WTI: "RWTC",      // WTI Cushing Oklahoma Spot Price
-    BRENT: "RBRTE",   // Brent Europe Spot Price
-    GASOLINE: "EER_EPMRR_PF4_RGC_DPG", // RBOB Gasoline Regular
-    DIESEL: "EER_EPD2DXL0_PF4_RGC_DPG", // Diesel No. 2
-};
-
 // Simple in-memory cache
 interface CacheEntry {
     data: MarketData;
