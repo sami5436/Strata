@@ -8,14 +8,16 @@ import { useSetupStore } from "@/lib/store";
 import type { ArbitrageOpportunity, ArbitrageResult } from "@/lib/domain/arbitrage";
 
 /**
- * Opportunity Explorer - List + Detail View
- * Left: 60% opportunity cards
- * Right: 40% selected opportunity detail
+ * Opportunity Explorer - Responsive List + Detail View
+ * 
+ * Mobile: Stacked - cards then detail below selected
+ * Desktop: Side-by-side 60% cards / 40% detail
  */
 export default function OpportunitiesPage() {
     const store = useSetupStore();
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [sensitivitySpread, setSensitivitySpread] = useState<number>(18);
+    const [showDetail, setShowDetail] = useState(false);
 
     // Build query params for API call
     const queryParams = new URLSearchParams({
@@ -68,12 +70,30 @@ export default function OpportunitiesPage() {
 
     const breakEvenSpread = 10; // Minimum profitable spread
 
+    const handleSelectOpportunity = (id: string) => {
+        setSelectedId(id);
+        setShowDetail(true);
+    };
+
     return (
         <MainLayout>
-            <div className="flex gap-6 h-full" style={{ minHeight: "calc(100vh - 140px)" }}>
-                {/* ===== LEFT: Opportunity Cards (60%) ===== */}
-                <div className="w-3/5 overflow-y-auto pr-2">
-                    <h1 className="text-2xl font-bold uppercase tracking-tight mb-4">
+            {/* Mobile: Show back button when viewing detail */}
+            {showDetail && selectedOpportunity && (
+                <div className="lg:hidden mb-4">
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowDetail(false)}
+                    >
+                        ← Back to List
+                    </Button>
+                </div>
+            )}
+
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-full" style={{ minHeight: "calc(100vh - 140px)" }}>
+                {/* ===== LEFT: Opportunity Cards (100% mobile, 60% desktop) ===== */}
+                <div className={`w-full lg:w-3/5 overflow-y-auto lg:pr-2 ${showDetail ? "hidden lg:block" : "block"}`}>
+                    <h1 className="text-xl md:text-2xl font-bold uppercase tracking-tight mb-4">
                         Opportunity Explorer
                     </h1>
 
@@ -91,7 +111,7 @@ export default function OpportunitiesPage() {
 
                     {!isLoading && !error && opportunities.length === 0 && (
                         <Card padding="lg" className="text-center">
-                            <h2 className="text-xl font-bold uppercase mb-2 text-concrete-gray">
+                            <h2 className="text-lg md:text-xl font-bold uppercase mb-2 text-concrete-gray">
                                 No Opportunities Available
                             </h2>
                             <p className="text-concrete-gray text-sm">
@@ -101,24 +121,24 @@ export default function OpportunitiesPage() {
                     )}
 
                     {/* Opportunity Cards */}
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                         {opportunities.map((opp) => (
                             <OpportunityCard
                                 key={opp.id}
                                 opportunity={opp}
                                 isSelected={selectedId === opp.id}
-                                onSelect={() => setSelectedId(opp.id)}
+                                onSelect={() => handleSelectOpportunity(opp.id)}
                             />
                         ))}
                     </div>
                 </div>
 
-                {/* ===== RIGHT: Detail Panel (40%) ===== */}
-                <div className="w-2/5 sticky top-0 h-fit">
+                {/* ===== RIGHT: Detail Panel (100% mobile, 40% desktop) ===== */}
+                <div className={`w-full lg:w-2/5 lg:sticky lg:top-0 lg:h-fit ${!showDetail ? "hidden lg:block" : "block"}`}>
                     {!selectedOpportunity ? (
-                        <Card padding="lg" className="h-full flex items-center justify-center min-h-[400px]">
+                        <Card padding="lg" className="h-full flex items-center justify-center min-h-[300px] lg:min-h-[400px]">
                             <div className="text-center">
-                                <p className="text-concrete-gray text-lg">
+                                <p className="text-concrete-gray text-base lg:text-lg">
                                     Select an opportunity to view details
                                 </p>
                             </div>
@@ -126,7 +146,7 @@ export default function OpportunitiesPage() {
                     ) : (
                         <Card padding="none" className="overflow-hidden">
                             {/* Header */}
-                            <div className="bg-black text-white p-4">
+                            <div className="bg-black text-white p-3 md:p-4">
                                 <Badge
                                     variant={selectedOpportunity.type === "quality" ? "success" : "default"}
                                     size="sm"
@@ -134,58 +154,58 @@ export default function OpportunitiesPage() {
                                 >
                                     {selectedOpportunity.title}
                                 </Badge>
-                                <h2 className="text-3xl font-mono font-bold text-forest-green">
+                                <h2 className="text-2xl md:text-3xl font-mono font-bold text-forest-green">
                                     +${selectedOpportunity.dailyProfit.toLocaleString()}/day
                                 </h2>
-                                <p className="text-gray-400 text-sm mt-1">
+                                <p className="text-gray-400 text-xs md:text-sm mt-1">
                                     ${(selectedOpportunity.annualProfit / 1000000).toFixed(1)}M annually
                                 </p>
                             </div>
 
                             {/* Section 1: The Math */}
-                            <div className="p-4 border-b-2 border-black">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-3">
+                            <div className="p-3 md:p-4 border-b-2 border-black">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-2 md:mb-3">
                                     The Math
                                 </h3>
-                                <pre className="font-mono text-sm bg-gray-50 p-3 border border-gray-200 overflow-x-auto">
-                                    {`Your Production:  ${selectedOpportunity.calculation.volume.toLocaleString().padStart(8)} bpd × $${selectedOpportunity.calculation.sellPrice.toFixed(2)} = $${(selectedOpportunity.calculation.volume * selectedOpportunity.calculation.sellPrice).toLocaleString()}/day
-Alternative Buy:  ${selectedOpportunity.calculation.volume.toLocaleString().padStart(8)} bpd × $${selectedOpportunity.calculation.buyPrice.toFixed(2)} = $${(selectedOpportunity.calculation.volume * selectedOpportunity.calculation.buyPrice).toLocaleString()}/day
-─────────────────────────────────────────────────────
-Net Gain:                                    $${selectedOpportunity.dailyProfit.toLocaleString()}/day`}
+                                <pre className="font-mono text-xs md:text-sm bg-gray-50 p-2 md:p-3 border border-gray-200 overflow-x-auto whitespace-pre-wrap">
+                                    {`Your:  ${selectedOpportunity.calculation.volume.toLocaleString()} bpd × $${selectedOpportunity.calculation.sellPrice.toFixed(2)}
+Alt:   ${selectedOpportunity.calculation.volume.toLocaleString()} bpd × $${selectedOpportunity.calculation.buyPrice.toFixed(2)}
+─────────────────────────
+Net:   +$${selectedOpportunity.dailyProfit.toLocaleString()}/day`}
                                 </pre>
                             </div>
 
                             {/* Section 2: The Trade */}
-                            <div className="p-4 border-b-2 border-black">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-3">
+                            <div className="p-3 md:p-4 border-b-2 border-black">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-2 md:mb-3">
                                     The Trade
                                 </h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-3">
-                                        <span className="bg-forest-green text-white text-xs font-bold px-2 py-1">1</span>
-                                        <div>
-                                            <p className="font-semibold text-sm">Sell your {store.crudeClassification?.label || "Light Sweet"}</p>
-                                            <p className="text-concrete-gray text-xs">→ Gulf Coast buyer @ ${selectedOpportunity.calculation.sellPrice.toFixed(2)}/bbl</p>
+                                <div className="space-y-2 md:space-y-3">
+                                    <div className="flex items-start gap-2 md:gap-3">
+                                        <span className="bg-forest-green text-white text-xs font-bold px-2 py-1 flex-shrink-0">1</span>
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-xs md:text-sm">Sell your {store.crudeClassification?.label || "Light Sweet"}</p>
+                                            <p className="text-concrete-gray text-xs truncate">→ Gulf Coast @ ${selectedOpportunity.calculation.sellPrice.toFixed(2)}/bbl</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-start gap-3">
-                                        <span className="bg-signal-amber text-white text-xs font-bold px-2 py-1">2</span>
-                                        <div>
-                                            <p className="font-semibold text-sm">Buy Heavy Sour (Mars/WCS)</p>
-                                            <p className="text-concrete-gray text-xs">→ Deliver to refinery @ ${selectedOpportunity.calculation.buyPrice.toFixed(2)}/bbl</p>
+                                    <div className="flex items-start gap-2 md:gap-3">
+                                        <span className="bg-signal-amber text-white text-xs font-bold px-2 py-1 flex-shrink-0">2</span>
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-xs md:text-sm">Buy Heavy Sour (Mars/WCS)</p>
+                                            <p className="text-concrete-gray text-xs truncate">→ Deliver @ ${selectedOpportunity.calculation.buyPrice.toFixed(2)}/bbl</p>
                                         </div>
                                     </div>
-                                    <div className="bg-gray-50 border border-gray-200 p-3 mt-3">
+                                    <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 mt-2">
                                         <p className="text-xs uppercase tracking-wider text-concrete-gray mb-1">Logistics</p>
-                                        <p className="text-sm">Requires 500K BBL storage + 2 week lead time</p>
+                                        <p className="text-xs md:text-sm">Requires 500K BBL storage + 2 week lead time</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs uppercase tracking-wider text-concrete-gray mb-2">Risks</p>
+                                        <p className="text-xs uppercase tracking-wider text-concrete-gray mb-1">Risks</p>
                                         <ul className="space-y-1">
                                             {selectedOpportunity.risks.map((risk, i) => (
-                                                <li key={i} className="flex items-start gap-2 text-sm">
-                                                    <span className="text-safety-red">⚠</span>
-                                                    {risk}
+                                                <li key={i} className="flex items-start gap-2 text-xs md:text-sm">
+                                                    <span className="text-safety-red flex-shrink-0">⚠</span>
+                                                    <span className="break-words">{risk}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -194,11 +214,11 @@ Net Gain:                                    $${selectedOpportunity.dailyProfit.
                             </div>
 
                             {/* Section 3: Sensitivity */}
-                            <div className="p-4 border-b-2 border-black">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-3">
+                            <div className="p-3 md:p-4 border-b-2 border-black">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-2 md:mb-3">
                                     Sensitivity Analysis
                                 </h3>
-                                <p className="text-sm text-concrete-gray mb-3">
+                                <p className="text-xs md:text-sm text-concrete-gray mb-2 md:mb-3">
                                     What if the spread changes?
                                 </p>
                                 <Slider
@@ -209,31 +229,31 @@ Net Gain:                                    $${selectedOpportunity.dailyProfit.
                                     unit="$/bbl"
                                     onChange={setSensitivitySpread}
                                 />
-                                <div className="mt-4 flex justify-between items-center">
+                                <div className="mt-3 md:mt-4 flex justify-between items-center">
                                     <div>
-                                        <p className="text-xs text-concrete-gray">At ${sensitivitySpread.toFixed(2)}/bbl spread:</p>
-                                        <p className={`font-mono text-xl font-bold ${sensitivityProfit > 0 ? "text-forest-green" : "text-safety-red"}`}>
+                                        <p className="text-xs text-concrete-gray">At ${sensitivitySpread.toFixed(2)}/bbl:</p>
+                                        <p className={`font-mono text-lg md:text-xl font-bold ${sensitivityProfit > 0 ? "text-forest-green" : "text-safety-red"}`}>
                                             ${sensitivityProfit.toLocaleString()}/day
                                         </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs text-concrete-gray">Break-even:</p>
-                                        <p className="font-mono font-bold">${breakEvenSpread}/bbl</p>
+                                        <p className="font-mono font-bold text-sm md:text-base">${breakEvenSpread}/bbl</p>
                                     </div>
                                 </div>
                                 {sensitivitySpread < breakEvenSpread && (
-                                    <p className="text-safety-red text-sm mt-2">
-                                        ⚠ Below break-even threshold - not profitable
+                                    <p className="text-safety-red text-xs md:text-sm mt-2">
+                                        ⚠ Below break-even threshold
                                     </p>
                                 )}
                             </div>
 
                             {/* Section 4: Actions */}
-                            <div className="p-4">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-3">
+                            <div className="p-3 md:p-4">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-concrete-gray mb-2 md:mb-3">
                                     Actions
                                 </h3>
-                                <div className="flex gap-3">
+                                <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                                     <Button variant="primary" size="md" className="flex-1">
                                         Set Alert
                                     </Button>
@@ -273,36 +293,36 @@ function OpportunityCard({
         <button
             onClick={onSelect}
             className={`
-                w-full text-left p-4 bg-white transition-none
+                w-full text-left p-3 md:p-4 bg-white transition-none
                 ${isSelected ? "border-4 border-black" : "border-2 border-black hover:bg-gray-50"}
             `}
         >
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2 md:mb-3">
                 <Badge
                     variant={opportunity.type === "quality" ? "success" : "default"}
                     size="sm"
                 >
                     {opportunity.title}
                 </Badge>
-                <span className="font-mono text-2xl font-bold text-forest-green">
+                <span className="font-mono text-xl md:text-2xl font-bold text-forest-green">
                     +{profitFormatted}/day
                 </span>
             </div>
 
-            <p className="text-concrete-gray text-sm mb-4">
+            <p className="text-concrete-gray text-xs md:text-sm mb-3 md:mb-4 line-clamp-2">
                 {opportunity.description}
             </p>
 
             {/* Confidence Bar */}
-            <div className="flex items-center gap-3">
-                <span className="text-xs text-concrete-gray uppercase tracking-wider">Confidence</span>
+            <div className="flex items-center gap-2 md:gap-3">
+                <span className="text-[10px] md:text-xs text-concrete-gray uppercase tracking-wider">Confidence</span>
                 <div className="flex-1 h-2 bg-gray-200">
                     <div
                         className={`h-full ${opportunity.confidence >= 75 ? "bg-forest-green" : opportunity.confidence >= 50 ? "bg-signal-amber" : "bg-safety-red"}`}
                         style={{ width: `${opportunity.confidence}%` }}
                     />
                 </div>
-                <span className="font-mono text-sm font-bold">{opportunity.confidence}%</span>
+                <span className="font-mono text-xs md:text-sm font-bold">{opportunity.confidence}%</span>
             </div>
         </button>
     );

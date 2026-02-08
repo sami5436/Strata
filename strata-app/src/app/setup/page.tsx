@@ -27,7 +27,7 @@ type DataSource = "manual" | "weatherford" | "scada" | "enverus";
 
 /**
  * Setup Page - Company Profile Configuration
- * One-at-a-time reveal with Previous button navigation
+ * Responsive: Mobile-first with adaptive layouts
  */
 export default function SetupPage() {
     const router = useRouter();
@@ -122,11 +122,11 @@ export default function SetupPage() {
     return (
         <MainLayout>
             {/* Page Header */}
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold uppercase tracking-tight mb-1">
+            <div className="mb-4 md:mb-6">
+                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight mb-1">
                     Company Setup
                 </h1>
-                <p className="text-concrete-gray uppercase tracking-wider text-sm">
+                <p className="text-concrete-gray uppercase tracking-wider text-xs md:text-sm">
                     Step {currentStep} of {totalSteps} — Configure your trading profile
                 </p>
             </div>
@@ -135,7 +135,7 @@ export default function SetupPage() {
                 {/* ===== COMPANY PROFILE ===== */}
                 {section === "company" && (
                     <Card padding="lg">
-                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                        <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight mb-3 md:mb-4 border-b-2 border-black pb-2">
                             Company Profile
                         </h2>
 
@@ -155,7 +155,7 @@ export default function SetupPage() {
                                 {store.errors.companyType && (
                                     <span className="text-xs text-safety-red mb-2 block">{store.errors.companyType}</span>
                                 )}
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                                     {companyTypes.map((item) => (
                                         <SelectionCard
                                             key={item.type}
@@ -170,12 +170,13 @@ export default function SetupPage() {
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-4 pt-6 mt-6 border-t-2 border-black">
+                        <div className="flex justify-end gap-3 md:gap-4 pt-4 md:pt-6 mt-4 md:mt-6 border-t-2 border-black">
                             <Button
                                 variant="primary"
                                 size="lg"
                                 onClick={handleNext}
                                 disabled={!canProceedStep1}
+                                className="w-full sm:w-auto"
                             >
                                 Next →
                             </Button>
@@ -186,47 +187,47 @@ export default function SetupPage() {
                 {/* ===== DATA SOURCE ===== */}
                 {section === "datasource" && (
                     <Card padding="lg">
-                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                        <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight mb-3 md:mb-4 border-b-2 border-black pb-2">
                             Data Source
                         </h2>
-                        <p className="text-concrete-gray text-sm mb-4">
+                        <p className="text-concrete-gray text-xs md:text-sm mb-4">
                             Connect your production data or enter manually
                         </p>
 
-                        <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 mb-4">
                             <button
                                 onClick={() => {/* placeholder */ }}
-                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                className="p-3 md:p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
                                 disabled
                             >
-                                <p className="font-bold uppercase text-sm">Weatherford</p>
+                                <p className="font-bold uppercase text-xs md:text-sm">Weatherford</p>
                                 <p className="text-xs text-concrete-gray">Production Optimization</p>
                                 <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
                             </button>
                             <button
                                 onClick={() => {/* placeholder */ }}
-                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                className="p-3 md:p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
                                 disabled
                             >
-                                <p className="font-bold uppercase text-sm">SCADA System</p>
+                                <p className="font-bold uppercase text-xs md:text-sm">SCADA System</p>
                                 <p className="text-xs text-concrete-gray">Real-time Field Data</p>
                                 <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
                             </button>
                             <button
                                 onClick={() => {/* placeholder */ }}
-                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                className="p-3 md:p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
                                 disabled
                             >
-                                <p className="font-bold uppercase text-sm">Enverus</p>
+                                <p className="font-bold uppercase text-xs md:text-sm">Enverus</p>
                                 <p className="text-xs text-concrete-gray">Production Analytics</p>
                                 <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
                             </button>
                             <button
                                 onClick={() => {/* placeholder */ }}
-                                className="p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
+                                className="p-3 md:p-4 border-2 border-gray-300 hover:border-black text-left opacity-50 cursor-not-allowed"
                                 disabled
                             >
-                                <p className="font-bold uppercase text-sm">OFS Portal</p>
+                                <p className="font-bold uppercase text-xs md:text-sm">OFS Portal</p>
                                 <p className="text-xs text-concrete-gray">Oilfield Services Data</p>
                                 <span className="text-[10px] uppercase tracking-wider text-concrete-gray mt-2 block">Coming Soon</span>
                             </button>
@@ -235,14 +236,14 @@ export default function SetupPage() {
                         <Button
                             variant={dataSource === "manual" ? "primary" : "secondary"}
                             size="lg"
-                            className="w-full mb-6"
+                            className="w-full mb-4 md:mb-6"
                             onClick={() => setDataSource("manual")}
                         >
                             {dataSource === "manual" ? "✓ Manual Entry Selected" : "Enter Data Manually"}
                         </Button>
 
-                        <div className="flex justify-between gap-4 pt-6 border-t-2 border-black">
-                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 md:gap-4 pt-4 md:pt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious} className="w-full sm:w-auto">
                                 ← Previous
                             </Button>
                             <Button
@@ -250,6 +251,7 @@ export default function SetupPage() {
                                 size="lg"
                                 onClick={handleNext}
                                 disabled={!canProceedStep2}
+                                className="w-full sm:w-auto"
                             >
                                 Next →
                             </Button>
@@ -260,11 +262,11 @@ export default function SetupPage() {
                 {/* ===== PRODUCTION DETAILS ===== */}
                 {section === "production" && (
                     <Card padding="lg">
-                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                        <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight mb-3 md:mb-4 border-b-2 border-black pb-2">
                             Production Details
                         </h2>
 
-                        <div className="space-y-6">
+                        <div className="space-y-4 md:space-y-6">
                             <NumberInput
                                 label="Total Daily Production Rate"
                                 value={store.dailyProduction}
@@ -276,7 +278,7 @@ export default function SetupPage() {
 
                             {/* Crude Streams Section */}
                             <div>
-                                <div className="flex justify-between items-center mb-3">
+                                <div className="flex justify-between items-center mb-2 md:mb-3">
                                     <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray">
                                         Crude Streams
                                     </span>
@@ -286,7 +288,7 @@ export default function SetupPage() {
                                 </div>
 
                                 {/* Stream List */}
-                                <div className="space-y-4">
+                                <div className="space-y-3 md:space-y-4">
                                     {store.crudeStreams.map((stream, index) => (
                                         <CrudeStreamRow
                                             key={stream.id}
@@ -304,7 +306,7 @@ export default function SetupPage() {
                                     <Button
                                         variant="secondary"
                                         size="md"
-                                        className="w-full mt-4"
+                                        className="w-full mt-3 md:mt-4"
                                         onClick={store.addCrudeStream}
                                     >
                                         + Add Crude Stream ({100 - totalStreamPercent}% remaining)
@@ -312,7 +314,7 @@ export default function SetupPage() {
                                 )}
 
                                 {!streamsValid && (
-                                    <p className="text-sm text-signal-amber mt-2">
+                                    <p className="text-xs md:text-sm text-signal-amber mt-2">
                                         ⚠ Adjust percentages to total 100%
                                     </p>
                                 )}
@@ -320,12 +322,12 @@ export default function SetupPage() {
 
                             {/* Blended Classification Display */}
                             {store.crudeClassification && (
-                                <div className="border-2 border-forest-green bg-forest-green/5 p-4">
+                                <div className="border-2 border-forest-green bg-forest-green/5 p-3 md:p-4">
                                     <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray block mb-1">
                                         Blended Crude Classification (Weighted Average)
                                     </span>
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-mono font-bold text-2xl text-forest-green">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                        <span className="font-mono font-bold text-xl md:text-2xl text-forest-green">
                                             {store.crudeClassification.label}
                                         </span>
                                         <div className="flex gap-2">
@@ -337,15 +339,15 @@ export default function SetupPage() {
                                             </Badge>
                                         </div>
                                     </div>
-                                    <p className="text-sm text-concrete-gray mt-1 font-mono">
+                                    <p className="text-xs md:text-sm text-concrete-gray mt-1 font-mono">
                                         Weighted Avg: API {store.apiGravity}°, Sulfur {store.sulfurContent.toFixed(2)}%
                                     </p>
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex justify-between gap-4 pt-6 mt-6 border-t-2 border-black">
-                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 md:gap-4 pt-4 md:pt-6 mt-4 md:mt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious} className="w-full sm:w-auto">
                                 ← Previous
                             </Button>
                             <Button
@@ -353,6 +355,7 @@ export default function SetupPage() {
                                 size="lg"
                                 onClick={handleNext}
                                 disabled={!canProceedStep3}
+                                className="w-full sm:w-auto"
                             >
                                 Next →
                             </Button>
@@ -363,7 +366,7 @@ export default function SetupPage() {
                 {/* ===== REFINING CAPABILITIES ===== */}
                 {section === "refining" && (
                     <Card padding="lg">
-                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                        <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight mb-3 md:mb-4 border-b-2 border-black pb-2">
                             Refining Capabilities
                         </h2>
 
@@ -406,8 +409,8 @@ export default function SetupPage() {
                             </CheckboxGroup>
                         </div>
 
-                        <div className="flex justify-between gap-4 pt-6 mt-6 border-t-2 border-black">
-                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 md:gap-4 pt-4 md:pt-6 mt-4 md:mt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious} className="w-full sm:w-auto">
                                 ← Previous
                             </Button>
                             <Button
@@ -415,6 +418,7 @@ export default function SetupPage() {
                                 size="lg"
                                 onClick={handleNext}
                                 disabled={!canProceedStep4}
+                                className="w-full sm:w-auto"
                             >
                                 Next →
                             </Button>
@@ -425,7 +429,7 @@ export default function SetupPage() {
                 {/* ===== MARKET SETTINGS ===== */}
                 {section === "market" && (
                     <Card padding="lg">
-                        <h2 className="text-2xl font-bold uppercase tracking-tight mb-4 border-b-2 border-black pb-2">
+                        <h2 className="text-xl md:text-2xl font-bold uppercase tracking-tight mb-3 md:mb-4 border-b-2 border-black pb-2">
                             Market Settings
                         </h2>
 
@@ -437,7 +441,7 @@ export default function SetupPage() {
                                 options={benchmarkOptions}
                             />
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                 <TextInput
                                     label="Known Quality Differential (Optional)"
                                     value={store.qualityDifferential}
@@ -473,11 +477,11 @@ export default function SetupPage() {
                             </CheckboxGroup>
                         </div>
 
-                        <div className="flex justify-between gap-4 pt-6 mt-6 border-t-2 border-black">
-                            <Button variant="secondary" size="lg" onClick={handlePrevious}>
+                        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 md:gap-4 pt-4 md:pt-6 mt-4 md:mt-6 border-t-2 border-black">
+                            <Button variant="secondary" size="lg" onClick={handlePrevious} className="w-full sm:w-auto">
                                 ← Previous
                             </Button>
-                            <Button variant="primary" size="lg" onClick={handleSubmit}>
+                            <Button variant="primary" size="lg" onClick={handleSubmit} className="w-full sm:w-auto">
                                 Complete Setup →
                             </Button>
                         </div>
@@ -489,7 +493,7 @@ export default function SetupPage() {
 }
 
 /**
- * Crude Stream Row Component
+ * Crude Stream Row Component - Responsive
  */
 function CrudeStreamRow({
     stream,
@@ -505,26 +509,28 @@ function CrudeStreamRow({
     onDelete: () => void;
 }) {
     return (
-        <div className="border-2 border-black p-4 space-y-4">
-            <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                    <span className="bg-black text-white text-xs font-bold px-2 py-1">
+        <div className="border-2 border-black p-3 md:p-4 space-y-3 md:space-y-4">
+            <div className="flex justify-between items-start gap-2">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                    <span className="bg-black text-white text-xs font-bold px-2 py-1 flex-shrink-0">
                         {index + 1}
                     </span>
                     <input
                         type="text"
                         value={stream.name}
                         onChange={(e) => onUpdate({ name: e.target.value })}
-                        className="font-semibold bg-transparent border-b border-gray-300 focus:border-black outline-none"
+                        className="font-semibold bg-transparent border-b border-gray-300 focus:border-black outline-none min-w-0 flex-1 text-sm md:text-base"
                         placeholder="Stream name"
                     />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                     <Badge variant={stream.classification.density === "Light" ? "light" : stream.classification.density === "Heavy" ? "heavy" : "default"}>
-                        {stream.classification.density}
+                        <span className="hidden sm:inline">{stream.classification.density}</span>
+                        <span className="sm:hidden">{stream.classification.density[0]}</span>
                     </Badge>
                     <Badge variant={stream.classification.sulfur === "Sweet" ? "sweet" : "sour"}>
-                        {stream.classification.sulfur}
+                        <span className="hidden sm:inline">{stream.classification.sulfur}</span>
+                        <span className="sm:hidden">{stream.classification.sulfur[0]}</span>
                     </Badge>
                     {canDelete && (
                         <button
@@ -537,7 +543,7 @@ function CrudeStreamRow({
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                 {/* Percentage */}
                 <div>
                     <span className="text-[10px] font-semibold uppercase tracking-widest text-concrete-gray block mb-1">
