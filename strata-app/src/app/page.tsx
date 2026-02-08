@@ -281,7 +281,7 @@ export default function LandingPage() {
               </p>
 
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
-                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Price Adjustment Model</p>
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">{'// Price Adjustment Model'}</p>
                 <div className="text-sm md:text-base">
                   <BlockMath math="\text{Price} = P_{benchmark} + \Delta_{API} + \Delta_{Sulfur}" />
                 </div>
@@ -308,7 +308,7 @@ export default function LandingPage() {
               </p>
 
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
-                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Black-Scholes (Put Option)</p>
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">{'// Black-Scholes (Put Option)'}</p>
                 <div className="text-sm md:text-base">
                   <BlockMath math="P = Ke^{-rT}N(-d_2) - S_0N(-d_1)" />
                 </div>
@@ -337,7 +337,7 @@ export default function LandingPage() {
               </p>
 
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
-                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Netback Comparison Algorithm</p>
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">{'// Netback Comparison Algorithm'}</p>
                 <div className="text-sm md:text-base">
                   <BlockMath math="\text{Netback} = P_{hub} - C_{transport} - C_{tariffs}" />
                 </div>
@@ -364,7 +364,7 @@ export default function LandingPage() {
               </p>
 
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
-                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// 3:2:1 Crack Spread</p>
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">{'// 3:2:1 Crack Spread'}</p>
                 <div className="text-sm md:text-base">
                   <BlockMath math="\text{Margin} = (P_{gas} \times Y_g) + (P_{diesel} \times Y_d) - P_{crude}" />
                 </div>
@@ -391,7 +391,7 @@ export default function LandingPage() {
               </p>
 
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
-                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Time Arbitrage</p>
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">{'// Time Arbitrage'}</p>
                 <div className="text-sm md:text-base">
                   <BlockMath math="\text{Profit} = F_{future} - S_{spot} - C_{storage}" />
                 </div>
@@ -418,7 +418,7 @@ export default function LandingPage() {
               </p>
 
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
-                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Location Basis Basis</p>
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">{'// Location Basis Basis'}</p>
                 <div className="text-sm md:text-base">
                   <BlockMath math="\text{Basis} = P_{local} - P_{NYMEX}" />
                 </div>
