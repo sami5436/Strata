@@ -31,11 +31,11 @@ export function TopBar() {
             setMobileMenuOpen(e.detail);
         };
 
-        window.addEventListener("mobileMenuToggle" as any, handleMobileMenuChange as any);
+        window.addEventListener("mobileMenuToggle", handleMobileMenuChange as unknown as EventListener);
 
         return () => {
             clearInterval(interval);
-            window.removeEventListener("mobileMenuToggle" as any, handleMobileMenuChange as any);
+            window.removeEventListener("mobileMenuToggle", handleMobileMenuChange as unknown as EventListener);
         };
     }, []);
 

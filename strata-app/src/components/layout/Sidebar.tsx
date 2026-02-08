@@ -96,6 +96,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                                         ${!isExpanded ? "justify-center px-0" : ""}
                                     `}
                                     title={item.label}
+                                    onClick={handleNavClick}
                                 >
                                     <span className={`text-center ${isExpanded ? "w-5" : "w-full"}`}>
                                         {item.icon}
