@@ -54,17 +54,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         const putSpread3m = calculatePutSpread(spotPrice, otm5Strike, otm10Strike, 3, volatility);
 
         // Get sorted recommendations
-        const recommendations = getHedgeRecommendations(spotPrice, volatility, {
-            spot: spotPrice,
-            m1: spotPrice + 0.25,
-            m2: spotPrice + 0.50,
-            m3: spotPrice + 0.75,
-            m6: spotPrice + 1.50,
-            m12: spotPrice + 2.50,
-            isContango: true,
-            slope: 0.21,
-            annualizedContango: 3.5
-        });
+        const recommendations = getHedgeRecommendations(spotPrice, volatility);
 
         // === 2. LOCATION PRICING ===
 

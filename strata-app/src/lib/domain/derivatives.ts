@@ -408,9 +408,7 @@ export function calculatePutSpread(
  */
 export function getHedgeRecommendations(
     spotPrice: number,
-    volatility: number,
-    _curve: FuturesCurve,
-    _riskTolerance: "low" | "medium" | "high" = "medium"
+    volatility: number
 ): HedgeStrategy[] {
     const recommendations: HedgeStrategy[] = [];
 

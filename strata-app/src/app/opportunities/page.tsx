@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import useSWR from "swr";
 import { MainLayout } from "@/components/layout";
 import { Card, Button, Badge, Slider } from "@/components/ui";
@@ -39,7 +39,10 @@ export default function OpportunitiesPage() {
         }
     );
 
-    const opportunities = data?.opportunities || [];
+    const opportunities = useMemo(
+        () => data?.opportunities || [],
+        [data?.opportunities]
+    );
     const selectedOpportunity = useMemo(
         () => opportunities.find((o) => o.id === selectedId) || null,
         [opportunities, selectedId]
@@ -51,11 +54,11 @@ export default function OpportunitiesPage() {
     }
 
     // Initialize sensitivity slider with current spread
-    useMemo(() => {
+    useEffect(() => {
         if (selectedOpportunity?.calculation?.spread) {
             setSensitivitySpread(selectedOpportunity.calculation.spread);
         }
-    }, [selectedOpportunity?.id]);
+    }, [selectedOpportunity?.calculation?.spread]);
 
     // Calculate sensitivity profit
     const sensitivityProfit = useMemo(() => {
