@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Force dynamic rendering since we use request.nextUrl
+export const dynamic = 'force-dynamic';
+
 interface DifferentialRequest {
     apiGravity: number;
     sulfurContent: number;

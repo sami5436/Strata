@@ -11,6 +11,9 @@ import {
     ProductionBasin
 } from "@/lib/domain/derivatives";
 
+// Force dynamic rendering since we use request.url
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/derivatives/hedging
  * 
