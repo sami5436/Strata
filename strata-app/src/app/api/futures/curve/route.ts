@@ -50,8 +50,8 @@ function getFuturesSymbols(): { symbol: string; monthsOut: number }[] {
     symbols.push({ symbol: `CL${getMonthCode(m6Month)}${m6Year}.NYM`, monthsOut: 6 });
 
     // 12 months out
-    let m12Month = currentMonth;
-    let m12Year = currentYear + 1;
+    const m12Month = currentMonth;
+    const m12Year = currentYear + 1;
     symbols.push({ symbol: `CL${getMonthCode(m12Month)}${m12Year}.NYM`, monthsOut: 12 });
 
     return symbols;

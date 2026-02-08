@@ -388,7 +388,7 @@ export function calculatePutSpread(
     const shortPut = blackScholes(spotPrice, shortPutStrike, T, riskFreeRate, volatility);
 
     const netCost = longPut.put - shortPut.put;
-    const maxProtection = longPutStrike - shortPutStrike;
+    // maxProtection = longPutStrike - shortPutStrike (used for reference)
 
     return {
         name: "Put Spread",
@@ -409,21 +409,16 @@ export function calculatePutSpread(
 export function getHedgeRecommendations(
     spotPrice: number,
     volatility: number,
-    curve: FuturesCurve,
-    riskTolerance: "low" | "medium" | "high" = "medium"
+    _curve: FuturesCurve,
+    _riskTolerance: "low" | "medium" | "high" = "medium"
 ): HedgeStrategy[] {
     const recommendations: HedgeStrategy[] = [];
 
-    // ATM put strike (at-the-money)
-    const atmStrike = Math.round(spotPrice);
-
     // OTM strikes
     const otm5 = Math.round(spotPrice * 0.95);  // 5% OTM
-    const otm10 = Math.round(spotPrice * 0.90); // 10% OTM
     const otm15 = Math.round(spotPrice * 0.85); // 15% OTM
 
     // Call strikes for collar
-    const call5 = Math.round(spotPrice * 1.05);
     const call10 = Math.round(spotPrice * 1.10);
 
     // 3-month protective put

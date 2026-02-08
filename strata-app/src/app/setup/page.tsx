@@ -94,7 +94,7 @@ export default function SetupPage() {
 
     // Map current step to actual section
     const getStepContent = () => {
-        let stepIndex = currentStep;
+        const stepIndex = currentStep;
 
         // Step 1: Company Profile
         if (stepIndex === 1) return "company";

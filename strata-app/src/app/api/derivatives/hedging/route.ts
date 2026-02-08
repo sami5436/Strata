@@ -8,8 +8,7 @@ import {
     BASIN_DATA,
     calculateBasinPrice,
     compareSellingLocations,
-    ProductionBasin,
-    HedgeStrategy
+    ProductionBasin
 } from "@/lib/domain/derivatives";
 
 /**
@@ -48,7 +47,6 @@ export async function GET(request: Request): Promise<NextResponse> {
 
         // Option Greeks for transparency
         const atmOption = blackScholes(spotPrice, atmStrike, 0.25, 0.05, volatility);
-        const otm5Option = blackScholes(spotPrice, otm5Strike, 0.25, 0.05, volatility);
 
         // Calculate specific hedge strategies
         const protectivePut3m = calculateProtectivePut(spotPrice, otm5Strike, 3, volatility);

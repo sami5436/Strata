@@ -183,7 +183,7 @@ export default function LandingPage() {
               </h3>
               <p className="text-concrete-gray text-sm md:text-base">
                 Live WTI, Brent, and regional differentials. Quality-adjusted
-                pricing based on your crude's API gravity and sulfur content.
+                pricing based on your crude&apos;s API gravity and sulfur content.
               </p>
             </div>
 
@@ -279,7 +279,7 @@ export default function LandingPage() {
 
             <div className="order-1 lg:order-2">
               <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tight mb-4 md:mb-6">
-                See Your Crude's True Value
+                See Your Crude&apos;s True Value
               </h2>
               <p className="text-base md:text-lg text-concrete-gray mb-6 md:mb-8">
                 The dashboard shows your personalized crude value based on current
