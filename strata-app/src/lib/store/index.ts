@@ -6,5 +6,7 @@ export type {
     CrudePreference,
     AlertChannel,
     CrudeClassification,
+    CrudeStream,
+    ProductionBasin,
     SetupState,
 } from "./setupStore";

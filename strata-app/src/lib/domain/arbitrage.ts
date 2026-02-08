@@ -1,17 +1,34 @@
 /**
- * Arbitrage Detection System
+ * Arbitrage & Opportunity Detection System
  * 
- * Phase 4: Quality Arbitrage Calculator
- * - Calculates opportunities for integrated companies
- * - Compares light sweet vs heavy sour spreads
+ * Real opportunities for producers using derivatives:
+ * 1. Hedging Recommendations (Black-Scholes priced puts/collars)
+ * 2. Contango Storage Play (real futures curve)
+ * 3. Basin Optimization (location-aware pricing)
+ * 4. WTI-Brent Export Arbitrage
  */
+
+import {
+    blackScholes,
+    calculateProtectivePut,
+    calculateCollar,
+    analyzeFuturesCurve,
+    calculateStorageArbitrage,
+    calculateBasinPrice,
+    compareSellingLocations,
+    BASIN_DATA,
+    ProductionBasin,
+    FuturesCurve,
+    HedgeStrategy
+} from "./derivatives";
 
 export interface UserProfile {
     companyType: "producer" | "refiner" | "integrated" | "trader";
-    dailyProduction: number;  // BPD
-    refiningCapacity: number; // BPD
-    apiGravity: number;       // API degrees
-    sulfurContent: number;    // Percentage
+    dailyProduction: number;
+    refiningCapacity: number;
+    apiGravity: number;
+    sulfurContent: number;
+    productionBasin?: ProductionBasin;
     crudeClassification: {
         density: "Light" | "Medium" | "Heavy";
         sulfur: "Sweet" | "Sour";
@@ -19,20 +36,21 @@ export interface UserProfile {
     } | null;
 }
 
-export interface MarketPrices {
-    wti: { price: number; change: number };
-    brent: { price: number; change: number };
-    heavySour: { price: number; change: number }; // Placeholder for heavy sour benchmark
+export interface MarketData {
+    wti: number;
+    brent: number;
+    volatility: number;
+    futuresCurve?: FuturesCurve;
 }
 
 export interface ArbitrageOpportunity {
     id: string;
-    type: "quality" | "temporal" | "location";
+    type: "quality" | "temporal" | "location" | "hedge" | "contango" | "basis";
     title: string;
     description: string;
     dailyProfit: number;
     annualProfit: number;
-    confidence: number; // 0-100
+    confidence: number;
     risks: string[];
     calculation: {
         sellPrice: number;
@@ -42,7 +60,8 @@ export interface ArbitrageOpportunity {
         formula: string;
     };
     actionable: boolean;
-    message?: string;
+    actionSteps?: string[];
+    hedgeDetails?: HedgeStrategy;
 }
 
 export interface ArbitrageResult {
@@ -51,11 +70,10 @@ export interface ArbitrageResult {
     message: string;
 }
 
-/**
- * Calculate user's crude price based on WTI + quality differential
- * Light premium: (API - 30) × $0.50/degree
- * Sweet premium: (0.5 - Sulfur%) × $10/point
- */
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
 export function calculateUserCrudePrice(
     wtiPrice: number,
     apiGravity: number,
@@ -66,160 +84,404 @@ export function calculateUserCrudePrice(
     return wtiPrice + lightPremium + sweetPremium;
 }
 
-/**
- * Estimate heavy sour crude price
- * Heavy sour typically trades at a discount to WTI
- * Discount based on: lower API gravity + higher sulfur = more discount
- * Typical heavy sour specs: API ~20, Sulfur ~3%
- */
-export function estimateHeavySourPrice(wtiPrice: number): number {
-    // Heavy sour discount: typically $15-25/bbl below WTI
-    // Using ~$18-20 as baseline discount for Maya-like crude
-    const heavyDiscount = 18;
-    return wtiPrice - heavyDiscount;
-}
-
-/**
- * Calculate historical spread average for confidence calculation
- * In production, this would query historical data
- */
-export function getHistoricalSpreadAverage(): number {
-    // Historical light-heavy spread average: ~$15-20/bbl
-    return 17;
-}
-
-/**
- * Calculate confidence based on current spread vs historical
- */
-export function calculateConfidence(
-    currentSpread: number,
-    historicalAverage: number
+export function calculateQualityDifferential(
+    apiGravity: number,
+    sulfurContent: number
 ): number {
-    // If spread is above historical average, higher confidence
-    // If spread is near historical average, moderate confidence
-    // If spread is below historical average, lower confidence
+    const lightPremium = (apiGravity - 30) * 0.5;
+    const sweetPremium = (0.5 - sulfurContent) * 10;
+    return lightPremium + sweetPremium;
+}
 
-    const spreadRatio = currentSpread / historicalAverage;
+export function estimateHeavySourPrice(wtiPrice: number): number {
+    return wtiPrice - 18;
+}
 
-    if (spreadRatio >= 1.5) return 95; // Exceptional spread
-    if (spreadRatio >= 1.2) return 85; // Above average
-    if (spreadRatio >= 1.0) return 75; // At average
-    if (spreadRatio >= 0.8) return 60; // Below average
-    return 50; // Low confidence
+// ============================================
+// PRODUCER OPPORTUNITIES
+// ============================================
+
+/**
+ * 1. HEDGING OPPORTUNITY (Black-Scholes priced)
+ */
+function calculateHedgingOpportunity(
+    profile: UserProfile,
+    market: MarketData
+): ArbitrageOpportunity | null {
+    const spotPrice = market.wti;
+    const vol = market.volatility || 0.30;
+
+    // Calculate 3-month protective put at 5% OTM
+    const putStrike = Math.round(spotPrice * 0.95);
+    const hedge = calculateProtectivePut(spotPrice, putStrike, 3, vol);
+
+    // Cost analysis
+    const hedgeCostPerBbl = hedge.upfrontCost;
+    const monthlyProduction = profile.dailyProduction * 30;
+    const totalHedgeCost = hedgeCostPerBbl * monthlyProduction * 3;
+
+    // Value protected (10% downside for 3 months)
+    const potentialLoss = spotPrice * 0.10 * monthlyProduction * 3;
+    const netProtection = potentialLoss - totalHedgeCost;
+
+    // Only recommend if protection value > 0
+    if (netProtection <= 0) return null;
+
+    return {
+        id: "hedge-001",
+        type: "hedge",
+        title: "Protective Put Hedge",
+        description: `Lock in $${hedge.floorPrice.toFixed(2)}/bbl floor with 3-month put at $${putStrike} strike. Cost: $${hedgeCostPerBbl.toFixed(2)}/bbl`,
+        dailyProfit: Math.round(netProtection / 90), // Spread over 3 months
+        annualProfit: Math.round(netProtection * 4), // 4 quarters
+        confidence: 90,
+        risks: [
+            "Premium paid is non-refundable",
+            "Unlimited upside preserved",
+            "Requires margin/collateral"
+        ],
+        calculation: {
+            sellPrice: hedge.floorPrice,
+            buyPrice: hedgeCostPerBbl,
+            spread: spotPrice - hedge.floorPrice - hedgeCostPerBbl,
+            volume: monthlyProduction * 3,
+            formula: `Floor: $${putStrike} - Premium: $${hedgeCostPerBbl.toFixed(2)} = Net $${hedge.floorPrice.toFixed(2)}/bbl`
+        },
+        actionable: true,
+        actionSteps: [
+            "Execute via CME CL options (NYMEX)",
+            `Buy ${Math.round(monthlyProduction * 3 / 1000)} put contracts at $${putStrike} strike`,
+            "Expiry: 3 months forward"
+        ],
+        hedgeDetails: hedge
+    };
 }
 
 /**
- * Main Quality Arbitrage Calculator
+ * 2. COLLAR STRATEGY (Costless hedging)
  */
-export function calculateQualityArbitrage(
+function calculateCollarOpportunity(
     profile: UserProfile,
-    wtiPrice: number
-): ArbitrageResult {
-    // Edge case 1: Not integrated - can't do quality arbitrage
-    if (profile.companyType !== "integrated") {
-        return {
-            opportunities: [],
-            status: "not_eligible",
-            message: profile.companyType === "producer"
-                ? "Integrate refining capabilities to unlock quality arbitrage opportunities"
-                : profile.companyType === "refiner"
-                    ? "Integrate production to optimize crude sourcing"
-                    : "Quality arbitrage requires production and refining assets"
-        };
-    }
+    market: MarketData
+): ArbitrageOpportunity | null {
+    const spotPrice = market.wti;
+    const vol = market.volatility || 0.30;
 
-    // Calculate prices
-    const userCrudePrice = calculateUserCrudePrice(
-        wtiPrice,
+    const putStrike = Math.round(spotPrice * 0.93); // 7% OTM put
+    const callStrike = Math.round(spotPrice * 1.10); // 10% OTM call
+
+    const collar = calculateCollar(spotPrice, putStrike, callStrike, 6, vol);
+
+    // Only show if near costless
+    if (Math.abs(collar.upfrontCost) > 0.75) return null;
+
+    const monthlyProduction = profile.dailyProduction * 30;
+
+    return {
+        id: "collar-001",
+        type: "hedge",
+        title: "Costless Collar",
+        description: `Lock in $${collar.floorPrice.toFixed(2)}-$${collar.ceilingPrice?.toFixed(2)} range for 6 months. Net cost: $${collar.upfrontCost.toFixed(2)}/bbl`,
+        dailyProfit: 0, // Costless means no immediate P&L
+        annualProfit: 0,
+        confidence: 95, // High confidence since it locks in range
+        risks: [
+            "Upside capped at ceiling",
+            "Floor protected",
+            "Requires credit line"
+        ],
+        calculation: {
+            sellPrice: collar.ceilingPrice || callStrike,
+            buyPrice: collar.floorPrice,
+            spread: (collar.ceilingPrice || callStrike) - collar.floorPrice,
+            volume: monthlyProduction * 6,
+            formula: `Buy $${putStrike} put, Sell $${callStrike} call → Range: $${collar.floorPrice.toFixed(2)}-$${collar.ceilingPrice?.toFixed(2)}`
+        },
+        actionable: true,
+        actionSteps: [
+            "Execute as zero-cost collar",
+            `Buy $${putStrike} puts, sell $${callStrike} calls`,
+            "6-month expiry for H2 protection"
+        ],
+        hedgeDetails: collar
+    };
+}
+
+/**
+ * 3. CONTANGO STORAGE PLAY
+ */
+function calculateContangoOpportunity(
+    profile: UserProfile,
+    market: MarketData
+): ArbitrageOpportunity | null {
+    // Use futures curve if available, otherwise estimate
+    const curve = market.futuresCurve || analyzeFuturesCurve(
+        market.wti,
+        market.wti + 0.25,
+        market.wti + 0.50,
+        market.wti + 0.75,
+        market.wti + 1.50,
+        market.wti + 2.50
+    );
+
+    if (!curve.isContango) return null;
+
+    const storageCostPerMonth = 0.50;
+    const storage6m = calculateStorageArbitrage(curve, 6, storageCostPerMonth);
+
+    if (!storage6m.viable) return null;
+
+    // Calculate based on storeable volume (1 month production)
+    const storableVolume = profile.dailyProduction * 30;
+    const totalProfit = storage6m.profit * storableVolume;
+
+    return {
+        id: "contango-001",
+        type: "contango",
+        title: "Contango Storage Arb",
+        description: `Store crude 6 months to capture $${curve.annualizedContango.toFixed(1)}% annualized contango. Net gain: $${storage6m.profit.toFixed(2)}/bbl`,
+        dailyProfit: Math.round(totalProfit / 180),
+        annualProfit: Math.round(totalProfit * 2), // 2 cycles per year
+        confidence: 75,
+        risks: [
+            "Requires storage capacity",
+            "Contango may narrow",
+            "Working capital required"
+        ],
+        calculation: {
+            sellPrice: curve.m6,
+            buyPrice: curve.spot,
+            spread: storage6m.profit,
+            volume: storableVolume,
+            formula: `6M Forward $${curve.m6.toFixed(2)} - Spot $${curve.spot.toFixed(2)} - Storage $${(storageCostPerMonth * 6).toFixed(2)} = $${storage6m.profit.toFixed(2)}/bbl`
+        },
+        actionable: true,
+        actionSteps: [
+            "Secure tank storage (Cushing or Gulf Coast)",
+            `Sell ${Math.round(storableVolume / 1000)} forward contracts at $${curve.m6.toFixed(2)}`,
+            "Deliver in 6 months"
+        ]
+    };
+}
+
+/**
+ * 4. BASIN OPTIMIZATION (Location arbitrage)
+ */
+function calculateBasinOpportunity(
+    profile: UserProfile,
+    market: MarketData
+): ArbitrageOpportunity | null {
+    const basin = profile.productionBasin || "permian_midland";
+    const basinInfo = BASIN_DATA[basin];
+
+    const comparison = compareSellingLocations(
+        market.wti,
+        market.brent,
+        basin,
         profile.apiGravity,
         profile.sulfurContent
     );
-    const heavySourPrice = estimateHeavySourPrice(wtiPrice);
-    const spread = userCrudePrice - heavySourPrice;
 
-    // Edge case 2: Spread too narrow
-    const MIN_PROFITABLE_SPREAD = 10;
-    if (spread < MIN_PROFITABLE_SPREAD) {
-        return {
-            opportunities: [],
-            status: "no_opportunities",
-            message: `Spread of $${spread.toFixed(2)}/bbl is below minimum threshold of $${MIN_PROFITABLE_SPREAD}/bbl. No profitable opportunities detected.`
-        };
-    }
+    // Check if transport is worth it
+    const localVsGulf = comparison.gulfPrice - comparison.localPrice;
+    const localVsExport = comparison.exportPrice - comparison.localPrice;
 
-    // Calculate arbitrage opportunity
-    const volume = Math.min(profile.dailyProduction, profile.refiningCapacity);
-    const dailyProfit = spread * volume;
-    const annualProfit = dailyProfit * 365;
+    const bestDiff = Math.max(localVsGulf, localVsExport);
 
-    // Calculate confidence
-    const historicalAvg = getHistoricalSpreadAverage();
-    const confidence = calculateConfidence(spread, historicalAvg);
+    // Minimum $1/bbl improvement to recommend
+    if (bestDiff < 1.00) return null;
 
-    // Define risks based on spread level
-    const risks: string[] = [];
-    if (spread > historicalAvg * 1.5) {
-        risks.push("Spread is unusually wide - may revert to mean");
-    }
-    if (spread < historicalAvg) {
-        risks.push("Spread is narrower than historical average");
-    }
-    risks.push("Storage and logistics required for swap execution");
-    risks.push("Refinery must handle heavy sour feedstock");
+    const transportableVolume = profile.dailyProduction * 0.30; // 30% can be transported
+    const dailyGain = bestDiff * transportableVolume;
 
-    const opportunity: ArbitrageOpportunity = {
-        id: "quality-arb-001",
-        type: "quality",
-        title: "Quality Arbitrage",
-        description: `Sell your ${profile.crudeClassification?.label || "Light Sweet"} crude at premium, buy Heavy Sour for refinery processing.`,
-        dailyProfit,
-        annualProfit,
-        confidence,
-        risks,
-        calculation: {
-            sellPrice: userCrudePrice,
-            buyPrice: heavySourPrice,
-            spread,
-            volume,
-            formula: `($${userCrudePrice.toFixed(2)} - $${heavySourPrice.toFixed(2)}) × ${volume.toLocaleString()} BPD = $${dailyProfit.toLocaleString()}/day`
-        },
-        actionable: true
-    };
+    const isExportBetter = localVsExport > localVsGulf;
 
     return {
-        opportunities: [opportunity],
-        status: "success",
-        message: `Found ${1} quality arbitrage opportunity`
+        id: "basis-001",
+        type: "basis",
+        title: isExportBetter ? "Export Arbitrage" : "Gulf Coast Premium",
+        description: comparison.recommendation,
+        dailyProfit: Math.round(dailyGain),
+        annualProfit: Math.round(dailyGain * 365),
+        confidence: 80,
+        risks: [
+            "Pipeline capacity constraints",
+            "Transport commitments required",
+            isExportBetter ? "Shipping rate volatility" : "Gulf basis volatility"
+        ],
+        calculation: {
+            sellPrice: isExportBetter ? comparison.exportPrice : comparison.gulfPrice,
+            buyPrice: comparison.localPrice,
+            spread: bestDiff,
+            volume: transportableVolume,
+            formula: `${isExportBetter ? "Export" : "Gulf"} $${(isExportBetter ? comparison.exportPrice : comparison.gulfPrice).toFixed(2)} - Local $${comparison.localPrice.toFixed(2)} = +$${bestDiff.toFixed(2)}/bbl`
+        },
+        actionable: true,
+        actionSteps: isExportBetter ? [
+            "Secure export terminal capacity (LOOP)",
+            "Charter Aframax tanker",
+            "Sell FOB Rotterdam or Dated Brent"
+        ] : [
+            `Secure pipeline capacity to Gulf (${basinInfo.pipelineTariff}/bbl)`,
+            "Negotiate Gulf Coast marketing agreement",
+            "Lock in LLS or MEH pricing"
+        ]
     };
 }
 
 /**
- * Main entry point for arbitrage detection
- * Returns all detected opportunities sorted by profit
+ * 5. WTI-BRENT SPREAD
  */
-export function detectArbitrageOpportunities(
+function calculateWtiBrentOpportunity(
     profile: UserProfile,
-    wtiPrice: number
-): ArbitrageResult {
-    // For now, only quality arbitrage
-    // Phase 5 will add temporal (contango) arbitrage
-    // Future phases will add location arbitrage
+    market: MarketData
+): ArbitrageOpportunity | null {
+    const spread = market.brent - market.wti;
+    const transportCost = 3.50;
+    const netGain = spread - transportCost;
 
-    const qualityResult = calculateQualityArbitrage(profile, wtiPrice);
+    if (netGain < 1.50) return null;
 
-    // If not eligible or error, return that result
-    if (qualityResult.status !== "success") {
-        return qualityResult;
-    }
-
-    // Combine all opportunities and sort by daily profit
-    const allOpportunities = [
-        ...qualityResult.opportunities
-    ].sort((a, b) => b.dailyProfit - a.dailyProfit);
+    const exportVolume = profile.dailyProduction * 0.20;
+    const dailyProfit = netGain * exportVolume;
 
     return {
-        opportunities: allOpportunities,
+        id: "wti-brent-001",
+        type: "location",
+        title: "Brent Premium Capture",
+        description: `Brent-WTI spread at $${spread.toFixed(2)}/bbl. Export nets +$${netGain.toFixed(2)}/bbl after transport.`,
+        dailyProfit: Math.round(dailyProfit),
+        annualProfit: Math.round(dailyProfit * 365),
+        confidence: spread > 5 ? 90 : 75,
+        risks: [
+            "Spread may narrow",
+            "Shipping costs volatile",
+            "Export logistics complex"
+        ],
+        calculation: {
+            sellPrice: market.brent,
+            buyPrice: market.wti + transportCost,
+            spread: netGain,
+            volume: exportVolume,
+            formula: `Brent $${market.brent.toFixed(2)} - WTI $${market.wti.toFixed(2)} - Ship $${transportCost.toFixed(2)} = $${netGain.toFixed(2)}/bbl`
+        },
+        actionable: true,
+        actionSteps: [
+            "Contact Enterprise/LOOP for export slot",
+            "Hedge with Brent-WTI spread options",
+            "Secure tanker charter"
+        ]
+    };
+}
+
+// ============================================
+// INTEGRATED COMPANY - QUALITY ARBITRAGE
+// ============================================
+
+function calculateQualityArbitrage(
+    profile: UserProfile,
+    market: MarketData
+): ArbitrageOpportunity | null {
+    if (profile.companyType !== "integrated") return null;
+
+    const userPrice = calculateUserCrudePrice(market.wti, profile.apiGravity, profile.sulfurContent);
+    const heavyPrice = estimateHeavySourPrice(market.wti);
+    const spread = userPrice - heavyPrice;
+
+    if (spread < 10) return null;
+
+    const volume = Math.min(profile.dailyProduction, profile.refiningCapacity);
+    const dailyProfit = spread * volume;
+
+    return {
+        id: "quality-001",
+        type: "quality",
+        title: "Quality Arbitrage",
+        description: `Sell ${profile.crudeClassification?.label || "Light Sweet"} at premium, buy Heavy Sour for refinery.`,
+        dailyProfit: Math.round(dailyProfit),
+        annualProfit: Math.round(dailyProfit * 365),
+        confidence: 85,
+        risks: [
+            "Heavy sour processing required",
+            "Spread may narrow",
+            "Quality consistency needed"
+        ],
+        calculation: {
+            sellPrice: userPrice,
+            buyPrice: heavyPrice,
+            spread,
+            volume,
+            formula: `Light @$${userPrice.toFixed(2)} - Heavy @$${heavyPrice.toFixed(2)} = $${spread.toFixed(2)}/bbl × ${volume.toLocaleString()} BPD`
+        },
+        actionable: true
+    };
+}
+
+// ============================================
+// MAIN ENTRY POINT
+// ============================================
+
+export function detectArbitrageOpportunities(
+    profile: UserProfile,
+    wtiPrice: number,
+    brentPrice: number = 0,
+    volatility: number = 0.30,
+    futuresCurve?: FuturesCurve
+): ArbitrageResult {
+    const market: MarketData = {
+        wti: wtiPrice,
+        brent: brentPrice > 0 ? brentPrice : wtiPrice + 4.5,
+        volatility,
+        futuresCurve
+    };
+
+    const opportunities: ArbitrageOpportunity[] = [];
+
+    // PRODUCER opportunities
+    if (profile.companyType === "producer" || profile.companyType === "integrated") {
+        const hedge = calculateHedgingOpportunity(profile, market);
+        if (hedge) opportunities.push(hedge);
+
+        const collar = calculateCollarOpportunity(profile, market);
+        if (collar) opportunities.push(collar);
+
+        const contango = calculateContangoOpportunity(profile, market);
+        if (contango) opportunities.push(contango);
+
+        const basis = calculateBasinOpportunity(profile, market);
+        if (basis) opportunities.push(basis);
+
+        const wtiBrent = calculateWtiBrentOpportunity(profile, market);
+        if (wtiBrent) opportunities.push(wtiBrent);
+    }
+
+    // INTEGRATED additional opportunity
+    if (profile.companyType === "integrated") {
+        const quality = calculateQualityArbitrage(profile, market);
+        if (quality) opportunities.push(quality);
+    }
+
+    if (opportunities.length === 0) {
+        return {
+            opportunities: [],
+            status: "no_opportunities",
+            message: "No significant opportunities at current market conditions"
+        };
+    }
+
+    // Sort by daily profit (descending), then confidence
+    opportunities.sort((a, b) => {
+        if (b.dailyProfit !== a.dailyProfit) {
+            return b.dailyProfit - a.dailyProfit;
+        }
+        return b.confidence - a.confidence;
+    });
+
+    const totalDaily = opportunities.reduce((sum, o) => sum + o.dailyProfit, 0);
+
+    return {
+        opportunities,
         status: "success",
-        message: `Found ${allOpportunities.length} arbitrage opportunit${allOpportunities.length === 1 ? 'y' : 'ies'}`
+        message: `Found ${opportunities.length} opportunities worth $${totalDaily.toLocaleString()}/day`
     };
 }

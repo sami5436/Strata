@@ -83,9 +83,9 @@ export function YourCrudeValueWidget() {
                 <div className="mt-4 pt-4 border-t-2 border-black">
                     <p className="text-sm text-concrete-gray">
                         WTI <span className="font-mono font-semibold text-black">${wtiPrice.toFixed(2)}</span>
-                        {totalDifferential >= 0 ? " + " : " "}
+                        {" "}
                         <span className={`font-mono font-semibold ${totalDifferential >= 0 ? "text-forest-green" : "text-safety-red"}`}>
-                            ${totalDifferential >= 0 ? "+" : ""}{totalDifferential.toFixed(2)} quality premium
+                            {totalDifferential >= 0 ? "+" : "-"}${Math.abs(totalDifferential).toFixed(2)} quality premium
                         </span>
                     </p>
                     <p className="text-xs text-concrete-gray mt-1 font-mono">
@@ -113,7 +113,8 @@ export function BestOpportunityWidget() {
         sulfurContent: String(store.sulfurContent || 0.3),
         crudeDensity: store.crudeClassification?.density || "Light",
         crudeSulfur: store.crudeClassification?.sulfur || "Sweet",
-        crudeLabel: store.crudeClassification?.label || "Light Sweet"
+        crudeLabel: store.crudeClassification?.label || "Light Sweet",
+        productionBasin: store.productionBasin || "permian_midland"
     });
 
     // Fetch arbitrage opportunities
@@ -247,6 +248,7 @@ export function BestOpportunityWidget() {
 
 /**
  * ProductionMetricsWidget - Full-width horizontal card showing key production metrics
+ * Now supports multiple crude streams
  */
 export function ProductionMetricsWidget() {
     const store = useSetupStore();
@@ -254,18 +256,17 @@ export function ProductionMetricsWidget() {
     const showProduction = store.companyType === "producer" || store.companyType === "integrated";
     const showRefining = store.companyType === "refiner" || store.companyType === "integrated";
 
-    // Calculate daily value (production × estimated price)
-    const estimatedPrice = 75; // Simplified estimate
-    const dailyRevenue = store.dailyProduction * estimatedPrice;
-
     // Calculate utilization if both production and refining
     const utilization = store.companyType === "integrated" && store.refiningCapacity > 0
         ? Math.min((store.dailyProduction / store.refiningCapacity) * 100, 100)
         : null;
 
+    const hasMultipleStreams = store.crudeStreams && store.crudeStreams.length > 1;
+
     return (
         <Card padding="none" className="w-full">
-            <div className="flex items-stretch divide-x divide-gray-200">
+            {/* Top Row: Key Metrics */}
+            <div className="flex items-stretch divide-x divide-gray-200 border-b border-gray-200">
                 {/* Daily Production */}
                 {showProduction && (
                     <div className="flex-1 p-4 text-center">
@@ -279,22 +280,22 @@ export function ProductionMetricsWidget() {
                     </div>
                 )}
 
-                {/* Crude Specs */}
+                {/* Blended Specs (Weighted Average) */}
                 {showProduction && (
                     <div className="flex-1 p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
-                            Crude Specs
+                            {hasMultipleStreams ? "Blended Specs" : "Crude Specs"}
                         </p>
                         <div className="flex justify-center items-baseline gap-2">
                             <span className="font-mono text-xl font-bold">{store.apiGravity}°</span>
                             <span className="text-concrete-gray">/</span>
-                            <span className="font-mono text-xl font-bold">{store.sulfurContent.toFixed(1)}%</span>
+                            <span className="font-mono text-xl font-bold">{store.sulfurContent.toFixed(2)}%</span>
                         </div>
                         <p className="text-xs text-concrete-gray">API / Sulfur</p>
                     </div>
                 )}
 
-                {/* Crude Classification */}
+                {/* Classification */}
                 {store.crudeClassification && showProduction && (
                     <div className="flex-1 p-4 text-center">
                         <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
@@ -343,19 +344,6 @@ export function ProductionMetricsWidget() {
                     </div>
                 )}
 
-                {/* Storage */}
-                {store.storageCapacity > 0 && (
-                    <div className="flex-1 p-4 text-center">
-                        <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
-                            Storage
-                        </p>
-                        <p className="font-mono text-2xl font-bold">
-                            {store.storageCapacity.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-concrete-gray">BBL</p>
-                    </div>
-                )}
-
                 {/* Benchmark */}
                 <div className="flex-1 p-4 text-center">
                     <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
@@ -366,20 +354,38 @@ export function ProductionMetricsWidget() {
                     </p>
                     <p className="text-xs text-concrete-gray">Primary Index</p>
                 </div>
-
-                {/* Nelson Complexity (Refiner) */}
-                {showRefining && (
-                    <div className="flex-1 p-4 text-center">
-                        <p className="text-[10px] uppercase tracking-widest text-concrete-gray mb-1">
-                            Complexity
-                        </p>
-                        <p className="font-mono text-lg font-bold uppercase">
-                            {store.nelsonComplexity}
-                        </p>
-                        <p className="text-xs text-concrete-gray">Nelson Index</p>
-                    </div>
-                )}
             </div>
+
+            {/* Bottom Row: Crude Streams (only if multiple streams) - Compact inline display */}
+            {showProduction && hasMultipleStreams && store.crudeStreams && (
+                <div className="px-4 py-2 bg-gray-50 flex items-center gap-4">
+                    <span className="text-[10px] uppercase tracking-widest text-concrete-gray whitespace-nowrap">
+                        Streams:
+                    </span>
+                    <div className="flex gap-4 overflow-x-auto">
+                        {store.crudeStreams.map((stream, index) => (
+                            <div key={stream.id} className="flex items-center gap-2 whitespace-nowrap">
+                                <span className="bg-black text-white text-[10px] font-bold px-1 py-0.5">
+                                    {index + 1}
+                                </span>
+                                <span className="text-xs font-semibold">{stream.name}</span>
+                                <span className="font-mono text-xs font-bold text-forest-green">
+                                    {stream.percentage}%
+                                </span>
+                                <span className="text-[10px] text-concrete-gray">
+                                    ({stream.apiGravity}° / {stream.sulfurContent.toFixed(1)}%)
+                                </span>
+                                <Badge
+                                    variant={stream.classification.sulfur === "Sweet" ? "sweet" : "sour"}
+                                    size="sm"
+                                >
+                                    {stream.classification.density} {stream.classification.sulfur}
+                                </Badge>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </Card>
     );
 }

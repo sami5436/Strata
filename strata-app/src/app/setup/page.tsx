@@ -20,6 +20,7 @@ import {
     CompanyType,
     NelsonComplexity,
     Benchmark,
+    CrudeStream,
 } from "@/lib/store";
 
 type DataSource = "manual" | "weatherford" | "scada" | "enverus";
@@ -42,10 +43,14 @@ export default function SetupPage() {
     const needsDataSource = showProduction || showRefining;
     const totalSteps = 1 + (needsDataSource ? 1 : 0) + (showProduction ? 1 : 0) + (showRefining ? 1 : 0) + 1;
 
+    // Stream percentage validation
+    const totalStreamPercent = store.getTotalStreamPercentage();
+    const streamsValid = totalStreamPercent === 100;
+
     // Can proceed checks for each step
     const canProceedStep1 = !!(store.companyName && store.companyType);
     const canProceedStep2 = dataSource === "manual";
-    const canProceedStep3 = store.dailyProduction > 0;
+    const canProceedStep3 = store.dailyProduction > 0 && streamsValid;
     const canProceedStep4 = store.refiningCapacity > 0;
 
     const handleNext = () => {
@@ -261,7 +266,7 @@ export default function SetupPage() {
 
                         <div className="space-y-6">
                             <NumberInput
-                                label="Daily Production Volume"
+                                label="Total Daily Production Rate"
                                 value={store.dailyProduction}
                                 onChange={store.setDailyProduction}
                                 unit="BPD"
@@ -269,42 +274,55 @@ export default function SetupPage() {
                                 error={store.errors.dailyProduction}
                             />
 
-                            <div className="grid grid-cols-2 gap-8">
-                                <div>
-                                    <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray block mb-2">
-                                        API Gravity
+                            {/* Crude Streams Section */}
+                            <div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray">
+                                        Crude Streams
                                     </span>
-                                    <Slider
-                                        value={store.apiGravity}
-                                        min={10}
-                                        max={50}
-                                        step={0.5}
-                                        unit="°"
-                                        onChange={store.setApiGravity}
-                                    />
+                                    <span className={`text-xs font-mono ${streamsValid ? "text-forest-green" : "text-signal-amber"}`}>
+                                        {totalStreamPercent}% / 100%
+                                    </span>
                                 </div>
 
-                                <div>
-                                    <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray block mb-2">
-                                        Sulfur Content
-                                    </span>
-                                    <Slider
-                                        value={store.sulfurContent}
-                                        min={0}
-                                        max={5}
-                                        step={0.1}
-                                        unit="%"
-                                        formatValue={(v) => v.toFixed(1)}
-                                        onChange={store.setSulfurContent}
-                                    />
+                                {/* Stream List */}
+                                <div className="space-y-4">
+                                    {store.crudeStreams.map((stream, index) => (
+                                        <CrudeStreamRow
+                                            key={stream.id}
+                                            stream={stream}
+                                            index={index}
+                                            canDelete={store.crudeStreams.length > 1}
+                                            onUpdate={(updates) => store.updateCrudeStream(stream.id, updates)}
+                                            onDelete={() => store.removeCrudeStream(stream.id)}
+                                        />
+                                    ))}
                                 </div>
+
+                                {/* Add Stream Button */}
+                                {store.crudeStreams.length < 5 && totalStreamPercent < 100 && (
+                                    <Button
+                                        variant="secondary"
+                                        size="md"
+                                        className="w-full mt-4"
+                                        onClick={store.addCrudeStream}
+                                    >
+                                        + Add Crude Stream ({100 - totalStreamPercent}% remaining)
+                                    </Button>
+                                )}
+
+                                {!streamsValid && (
+                                    <p className="text-sm text-signal-amber mt-2">
+                                        ⚠ Adjust percentages to total 100%
+                                    </p>
+                                )}
                             </div>
 
-                            {/* Live Classification Display */}
+                            {/* Blended Classification Display */}
                             {store.crudeClassification && (
                                 <div className="border-2 border-forest-green bg-forest-green/5 p-4">
                                     <span className="text-xs font-semibold uppercase tracking-widest text-concrete-gray block mb-1">
-                                        Crude Classification
+                                        Blended Crude Classification (Weighted Average)
                                     </span>
                                     <div className="flex items-center gap-3">
                                         <span className="font-mono font-bold text-2xl text-forest-green">
@@ -320,7 +338,7 @@ export default function SetupPage() {
                                         </div>
                                     </div>
                                     <p className="text-sm text-concrete-gray mt-1 font-mono">
-                                        API {store.apiGravity}°, Sulfur {store.sulfurContent.toFixed(1)}%
+                                        Weighted Avg: API {store.apiGravity}°, Sulfur {store.sulfurContent.toFixed(2)}%
                                     </p>
                                 </div>
                             )}
@@ -467,5 +485,105 @@ export default function SetupPage() {
                 )}
             </div>
         </MainLayout>
+    );
+}
+
+/**
+ * Crude Stream Row Component
+ */
+function CrudeStreamRow({
+    stream,
+    index,
+    canDelete,
+    onUpdate,
+    onDelete,
+}: {
+    stream: CrudeStream;
+    index: number;
+    canDelete: boolean;
+    onUpdate: (updates: Partial<Omit<CrudeStream, "id" | "classification">>) => void;
+    onDelete: () => void;
+}) {
+    return (
+        <div className="border-2 border-black p-4 space-y-4">
+            <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                    <span className="bg-black text-white text-xs font-bold px-2 py-1">
+                        {index + 1}
+                    </span>
+                    <input
+                        type="text"
+                        value={stream.name}
+                        onChange={(e) => onUpdate({ name: e.target.value })}
+                        className="font-semibold bg-transparent border-b border-gray-300 focus:border-black outline-none"
+                        placeholder="Stream name"
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Badge variant={stream.classification.density === "Light" ? "light" : stream.classification.density === "Heavy" ? "heavy" : "default"}>
+                        {stream.classification.density}
+                    </Badge>
+                    <Badge variant={stream.classification.sulfur === "Sweet" ? "sweet" : "sour"}>
+                        {stream.classification.sulfur}
+                    </Badge>
+                    {canDelete && (
+                        <button
+                            onClick={onDelete}
+                            className="text-safety-red hover:bg-safety-red/10 px-2 py-1 text-xs font-bold"
+                        >
+                            ✕
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+                {/* Percentage */}
+                <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-concrete-gray block mb-1">
+                        % of Production
+                    </span>
+                    <Slider
+                        value={stream.percentage}
+                        min={0}
+                        max={100}
+                        step={1}
+                        unit="%"
+                        onChange={(val) => onUpdate({ percentage: val })}
+                    />
+                </div>
+
+                {/* API Gravity */}
+                <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-concrete-gray block mb-1">
+                        API Gravity
+                    </span>
+                    <Slider
+                        value={stream.apiGravity}
+                        min={10}
+                        max={50}
+                        step={0.5}
+                        unit="°"
+                        onChange={(val) => onUpdate({ apiGravity: val })}
+                    />
+                </div>
+
+                {/* Sulfur */}
+                <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-concrete-gray block mb-1">
+                        Sulfur Content
+                    </span>
+                    <Slider
+                        value={stream.sulfurContent}
+                        min={0}
+                        max={5}
+                        step={0.1}
+                        unit="%"
+                        formatValue={(v) => v.toFixed(1)}
+                        onChange={(val) => onUpdate({ sulfurContent: val })}
+                    />
+                </div>
+            </div>
+        </div>
     );
 }

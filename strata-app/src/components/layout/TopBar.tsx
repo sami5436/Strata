@@ -1,13 +1,31 @@
 "use client";
 
 import { useSetupStore } from "@/lib/store";
+import { useState, useEffect } from "react";
 
 /**
  * TopBar Component - Fixed header with company info and status
+ * Responsive to sidebar collapsed/expanded state
  */
 export function TopBar() {
     const store = useSetupStore();
     const hasSetup = store.companyName && store.companyType;
+    const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
+    // Listen for sidebar state changes
+    useEffect(() => {
+        const saved = localStorage.getItem("sidebar-expanded");
+        if (saved !== null) {
+            setSidebarExpanded(saved === "true");
+        }
+
+        // Check periodically for changes
+        const interval = setInterval(() => {
+            const current = localStorage.getItem("sidebar-expanded");
+            setSidebarExpanded(current === "true");
+        }, 100);
+        return () => clearInterval(interval);
+    }, []);
 
     const getCompanyTypeBadge = () => {
         if (!store.crudeClassification || !store.companyType) return null;
@@ -17,7 +35,10 @@ export function TopBar() {
     };
 
     return (
-        <header className="fixed top-0 left-sidebar right-0 h-topbar bg-black text-white z-40 flex items-center justify-between px-6 border-b-2 border-black">
+        <header
+            className="fixed top-0 right-0 h-topbar bg-black text-white z-40 flex items-center justify-between px-6 border-b-2 border-black transition-all duration-200"
+            style={{ left: sidebarExpanded ? 240 : 64 }}
+        >
             {/* Left: Title */}
             <div className="flex items-center gap-4">
                 <h1 className="font-semibold uppercase tracking-wider text-sm">

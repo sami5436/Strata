@@ -4,19 +4,13 @@ import {
     UserProfile,
     ArbitrageResult
 } from "@/lib/domain/arbitrage";
+import { ProductionBasin } from "@/lib/domain/derivatives";
 
 /**
  * GET /api/arbitrage/detect
  * 
- * Query params (all required for calculation):
- * - companyType: producer | refiner | integrated | trader
- * - dailyProduction: number (BPD)
- * - refiningCapacity: number (BPD) 
- * - apiGravity: number (degrees)
- * - sulfurContent: number (percentage)
- * - crudeDensity: Light | Medium | Heavy
- * - crudeSulfur: Sweet | Sour
- * - crudeLabel: string
+ * Calculates real derivatives opportunities for producers using Black-Scholes,
+ * futures curve analysis, and location-aware pricing
  */
 export async function GET(request: Request) {
     try {
@@ -31,6 +25,7 @@ export async function GET(request: Request) {
         const crudeDensity = searchParams.get("crudeDensity") as "Light" | "Medium" | "Heavy" | null;
         const crudeSulfur = searchParams.get("crudeSulfur") as "Sweet" | "Sour" | null;
         const crudeLabel = searchParams.get("crudeLabel");
+        const productionBasin = (searchParams.get("productionBasin") || "permian_midland") as ProductionBasin;
 
         // Validate required params
         if (!companyType) {
@@ -51,6 +46,7 @@ export async function GET(request: Request) {
             refiningCapacity,
             apiGravity,
             sulfurContent,
+            productionBasin,
             crudeClassification: crudeDensity && crudeSulfur ? {
                 density: crudeDensity,
                 sulfur: crudeSulfur,
@@ -58,22 +54,27 @@ export async function GET(request: Request) {
             } : null
         };
 
-        // Fetch current WTI price from our market API
-        let wtiPrice = 80; // Default fallback
+        // Fetch current market prices
+        let wtiPrice = 72;
+        let brentPrice = 76;
+
         try {
             const marketResponse = await fetch(
                 new URL("/api/market", request.url).toString()
             );
             if (marketResponse.ok) {
                 const marketData = await marketResponse.json();
-                wtiPrice = marketData.prices?.wti?.price || 80;
+                wtiPrice = marketData.prices?.wti?.price || 72;
+                brentPrice = marketData.prices?.brent?.price || wtiPrice + 4;
             }
         } catch {
-            console.warn("Failed to fetch market prices, using default WTI price");
+            console.warn("Failed to fetch market prices, using defaults");
         }
 
-        // Calculate arbitrage opportunities
-        const result = detectArbitrageOpportunities(profile, wtiPrice);
+        // Calculate opportunities with derivatives pricing
+        // Using 30% implied volatility (typical for WTI)
+        const volatility = 0.30;
+        const result = detectArbitrageOpportunities(profile, wtiPrice, brentPrice, volatility);
 
         return NextResponse.json(result);
 
