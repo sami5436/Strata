@@ -269,7 +269,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Logic 1: Crude Valuation */}
             <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
               <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
@@ -292,6 +292,21 @@ export default function LandingPage() {
                 </div>
               </div>
 
+              <p className="text-[10px] text-concrete-gray uppercase tracking-wider">
+                *Based on standard pipeline specific gravity tables
+              </p>
+            </div>
+
+            {/* Logic 2: Option Pricing */}
+            <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
+              <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono text-sm border border-black">2</span>
+                Option Pricing
+              </h3>
+              <p className="text-gray-600 text-sm mb-6 flex-grow">
+                We model protective puts and collars to lock in a floor price while protecting your exposure to upside potential.
+              </p>
+
               <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
                 <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Black-Scholes (Put Option)</p>
                 <div className="text-sm md:text-base">
@@ -300,9 +315,9 @@ export default function LandingPage() {
                 <div className="h-px bg-gray-800 my-3"></div>
                 <div className="grid grid-cols-2 gap-x-2 text-xs opacity-80 font-mono">
                   <span>S₀ = Spot Price</span>
-                  <span>K = Strike Price</span>
+                  <span>K = Floor Price</span>
                   <span>σ = Volatility</span>
-                  <span>T = Time to Expiry</span>
+                  <span>T = Expiry</span>
                 </div>
               </div>
 
@@ -337,6 +352,87 @@ export default function LandingPage() {
                 Includes tariffs & terminal fees
               </p>
             </div>
+
+            {/* Logic 4: Refining Margins */}
+            <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
+              <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono text-sm border border-black">4</span>
+                Refining Margins
+              </h3>
+              <p className="text-gray-600 text-sm mb-6 flex-grow">
+                We calculate the &quot;Crack Spread&quot; to determine if it&apos;s profitable to refine crude in-house vs selling raw.
+              </p>
+
+              <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// 3:2:1 Crack Spread</p>
+                <div className="text-sm md:text-base">
+                  <BlockMath math="\text{Margin} = (P_{gas} \times Y_g) + (P_{diesel} \times Y_d) - P_{crude}" />
+                </div>
+                <div className="h-px bg-gray-800 my-3"></div>
+                <div className="grid grid-cols-2 gap-x-2 text-xs opacity-80 font-mono">
+                  <span>Yg = Gas Yield</span>
+                  <span>Yd = Diesel Yield</span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-concrete-gray uppercase tracking-wider">
+                Modeled on standard complex refinery yields
+              </p>
+            </div>
+
+            {/* Logic 5: Storage Optimization */}
+            <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
+              <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono text-sm border border-black">5</span>
+                Storage Optimization
+              </h3>
+              <p className="text-gray-600 text-sm mb-6 flex-grow">
+                We identify Contango markets where storing oil for future sale guarantees risk-free profit above storage costs.
+              </p>
+
+              <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Time Arbitrage</p>
+                <div className="text-sm md:text-base">
+                  <BlockMath math="\text{Profit} = F_{future} - S_{spot} - C_{storage}" />
+                </div>
+                <div className="h-px bg-gray-800 my-3"></div>
+                <p className="text-industrial-yellow font-bold font-mono text-xs md:text-sm">
+                  if (F_future &gt; S_spot)<br />
+                  return &quot;Fill Tanks&quot;
+                </p>
+              </div>
+
+              <p className="text-[10px] text-concrete-gray uppercase tracking-wider">
+                Calculated daily against Cushing tank rates
+              </p>
+            </div>
+
+            {/* Logic 6: Basis Trading */}
+            <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
+              <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono text-sm border border-black">6</span>
+                Basis Trading
+              </h3>
+              <p className="text-gray-600 text-sm mb-6 flex-grow">
+                We track the spreads between your local physical hubs and the NYMEX benchmark to lock in favorable differentials.
+              </p>
+
+              <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Location Basis Basis</p>
+                <div className="text-sm md:text-base">
+                  <BlockMath math="\text{Basis} = P_{local} - P_{NYMEX}" />
+                </div>
+                <div className="h-px bg-gray-800 my-3"></div>
+                <div className="grid grid-cols-2 gap-x-2 text-xs opacity-80 font-mono">
+                  <span>P_local = Hub Price</span>
+                  <span>P_NYMEX = WTI</span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-concrete-gray uppercase tracking-wider">
+                Supports Midland, Houston, and Cushing
+              </p>
+            </div>
           </div>
 
           {/* Beginner Guide Toggle */}
@@ -356,38 +452,65 @@ export default function LandingPage() {
           {/* Collapsible Beginner Guide */}
           {showBeginnerGuide && (
             <div className="mt-8 border-t-2 border-black bg-white animation-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-3 divide-y-2 md:divide-y-0 md:divide-x-2 divide-black border-2 border-t-0 border-black">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-y-2 lg:divide-y-0 lg:divide-x-2 divide-black border-2 border-t-0 border-black">
                 {/* Analogy 1 */}
                 <div className="p-6 md:p-8 bg-gray-50">
-                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg">The Coffee Shop Analogy</h4>
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg leading-tight">The Coffee Shop Analogy</h4>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Quality Banks</p>
                   <p className="text-sm text-gray-700 leading-relaxed">
                     Imagine selling coffee beans. High-quality Arabica beans sell for more than generic Robusta.
                     <strong> Quality Banks</strong> are just the price list that says &quot;If your beans are 5% better, we pay $0.50 more.&quot;
-                    We verify your oil&apos;s quality so you get paid for the premium stuff.
                   </p>
                 </div>
 
                 {/* Analogy 2 */}
                 <div className="p-6 md:p-8 bg-gray-50">
-                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg">The Car Insurance Analogy</h4>
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg leading-tight">The Car Insurance Analogy</h4>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Option Pricing</p>
                   <p className="text-sm text-gray-700 leading-relaxed">
                     Hedging is just like buying insurance for your car. You pay a small monthly premium (the option price)
-                    so that if you crash (oil prices drop to zero), the insurance company pays you the full value of your car.
-                    We calculate exactly how much that &quot;premium&quot; should cost.
+                    so that if you crash (prices drop), the insurance pays you the full value.
                   </p>
                 </div>
 
                 {/* Analogy 3 */}
                 <div className="p-6 md:p-8 bg-gray-50">
-                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg">The &quot;Selling Online&quot; Analogy</h4>
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg leading-tight">The &quot;Selling Online&quot; Analogy</h4>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Arbitrage</p>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    Imagine you&apos;re selling a bike. In your town, it&apos;s worth $100. In the big city next door, it&apos;s worth $150.
-                    But it costs $20 in gas to drive there.
-                    <strong> Arbitrage</strong> is just the math: $150 - $20 (Gas) = $130.
-                    Since $130 &gt; $100, you drive to the city. We do this for your oil every day.
+                    Imagine your bike is worth $100 in town but $150 in the city. If gas costs $20, you make $30 profit by driving.
+                    We calculate this &quot;drive&quot; for every pipeline route.
+                  </p>
+                </div>
+
+                {/* Analogy 4 */}
+                <div className="p-6 md:p-8 bg-gray-50 border-t-2 lg:border-t-0 border-black">
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg leading-tight">The Restaurant Analogy</h4>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Refining</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Should you sell a raw steak for $10, or cook it and sell a steak dinner for $25?
+                    If cooking costs $5, you make $10 more by <strong>refining</strong> (cooking) it yourself.
+                  </p>
+                </div>
+
+                {/* Analogy 5 */}
+                <div className="p-6 md:p-8 bg-gray-50 border-t-2 lg:border-t-0 lg:border-l-2 border-black">
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg leading-tight">The Fine Wine Analogy</h4>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Storage</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    If you know a wine will be worth $100 next year, and you can buy it now for $50 and store it for $10, do it.
+                    That&apos;s <strong>Contango</strong>. We tell you when to put oil in the tank.
+                  </p>
+                </div>
+
+                {/* Analogy 6 */}
+                <div className="p-6 md:p-8 bg-gray-50 border-t-2 lg:border-t-0 lg:border-l-2 border-black">
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg leading-tight">The Real Estate Analogy</h4>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Basis</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    A house in Midland is cheaper than the same house in New York.
+                    <strong> Basis</strong> is just the price difference based on location.
+                    We trade the changes in that &quot;property value&quot; spread.
                   </p>
                 </div>
               </div>
