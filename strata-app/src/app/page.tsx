@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import "katex/dist/katex.min.css";
+import { BlockMath } from "react-katex";
 
 /**
  * Public Landing Page - Industrial Brutalism Style
@@ -12,6 +14,7 @@ import { Button } from "@/components/ui/Button";
  */
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showBeginnerGuide, setShowBeginnerGuide] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,8 +34,8 @@ export default function LandingPage() {
           <Link href="#features" className="text-sm uppercase tracking-wider hover:text-industrial-yellow transition-colors">
             Features
           </Link>
-          <Link href="#demo" className="text-sm uppercase tracking-wider hover:text-industrial-yellow transition-colors">
-            Demo
+          <Link href="#methodology" className="text-sm uppercase tracking-wider hover:text-industrial-yellow transition-colors">
+            Methodology
           </Link>
           <Link href="#pricing" className="text-sm uppercase tracking-wider hover:text-industrial-yellow transition-colors">
             Pricing
@@ -67,8 +70,8 @@ export default function LandingPage() {
             <Link href="#features" className="text-sm uppercase tracking-wider py-2" onClick={() => setMobileMenuOpen(false)}>
               Features
             </Link>
-            <Link href="#demo" className="text-sm uppercase tracking-wider py-2" onClick={() => setMobileMenuOpen(false)}>
-              Demo
+            <Link href="#methodology" className="text-sm uppercase tracking-wider py-2" onClick={() => setMobileMenuOpen(false)}>
+              Methodology
             </Link>
             <Link href="#pricing" className="text-sm uppercase tracking-wider py-2" onClick={() => setMobileMenuOpen(false)}>
               Pricing
@@ -117,9 +120,9 @@ export default function LandingPage() {
                   Start Free Trial
                 </Button>
               </Link>
-              <Link href="#demo" className="w-full sm:w-auto">
+              <Link href="#methodology" className="w-full sm:w-auto">
                 <Button variant="secondary" size="lg" className="w-full text-base md:text-lg px-6 md:px-8 py-3 md:py-4">
-                  See Demo
+                  See The Math
                 </Button>
               </Link>
             </div>
@@ -254,65 +257,152 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo Section */}
-      <section id="demo" className="py-12 md:py-20 px-4 md:px-8 bg-gray-50">
+      {/* Methodology Section */}
+      <section id="methodology" className="py-12 md:py-20 px-4 md:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-            <div className="relative order-2 lg:order-1">
-              <div className="absolute -top-2 -left-2 md:-top-4 md:-left-4 w-full h-full bg-black" />
-              <div className="relative border-2 md:border-4 border-black bg-white">
-                <Image
-                  src="/dashboard-preview.png"
-                  alt="Strata Dashboard"
-                  width={800}
-                  height={500}
-                  className="w-full h-auto"
-                />
-              </div>
-            </div>
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tight mb-3 md:mb-4">
+              Transparent Methodology
+            </h2>
+            <p className="text-concrete-gray text-sm md:text-lg max-w-2xl mx-auto">
+              We don&apos;t use black boxes. Here is the math behind our intelligence.
+            </p>
+          </div>
 
-            <div className="order-1 lg:order-2">
-              <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tight mb-4 md:mb-6">
-                See Your Crude&apos;s True Value
-              </h2>
-              <p className="text-base md:text-lg text-concrete-gray mb-6 md:mb-8">
-                The dashboard shows your personalized crude value based on current
-                market conditions, your production location, and crude quality specs.
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Logic 1: Crude Valuation */}
+            <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
+              <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono text-sm border border-black">1</span>
+                Quality Banks
+              </h3>
+              <p className="text-gray-600 text-sm mb-6 flex-grow">
+                We calculate your realized price by adjusting the benchmark WTI/Brent price against standard quality banks.
               </p>
 
-              <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
-                <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 md:w-6 md:h-6 bg-forest-green flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs md:text-sm">✓</span>
-                  </span>
-                  <span className="text-sm md:text-base">Quality premiums calculated from your API gravity & sulfur</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 md:w-6 md:h-6 bg-forest-green flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs md:text-sm">✓</span>
-                  </span>
-                  <span className="text-sm md:text-base">Basin-specific differentials (Permian, Eagle Ford, Bakken)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 md:w-6 md:h-6 bg-forest-green flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs md:text-sm">✓</span>
-                  </span>
-                  <span className="text-sm md:text-base">Best opportunity highlighted with daily profit estimate</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 md:w-6 md:h-6 bg-forest-green flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-xs md:text-sm">✓</span>
-                  </span>
-                  <span className="text-sm md:text-base">Quick calculator for what-if scenarios</span>
-                </li>
-              </ul>
+              <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Price Adjustment Model</p>
+                <div className="text-sm md:text-base">
+                  <BlockMath math="\text{Price} = P_{benchmark} + \Delta_{API} + \Delta_{Sulfur}" />
+                </div>
+                <div className="h-px bg-gray-800 my-3"></div>
+                <div className="text-xs md:text-sm">
+                  <BlockMath math="\Delta_{API} = (\text{API}_{local} - 30^\circ) \times \$0.05" />
+                  <BlockMath math="\Delta_{Sulfur} = (0.5\% - S_{local}) \times \$0.10" />
+                </div>
+              </div>
 
-              <Link href="/setup" className="inline-block">
-                <Button variant="primary" size="lg">
-                  Try It Now
-                </Button>
-              </Link>
+              <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Black-Scholes (Put Option)</p>
+                <div className="text-sm md:text-base">
+                  <BlockMath math="P = Ke^{-rT}N(-d_2) - S_0N(-d_1)" />
+                </div>
+                <div className="h-px bg-gray-800 my-3"></div>
+                <div className="grid grid-cols-2 gap-x-2 text-xs opacity-80 font-mono">
+                  <span>S₀ = Spot Price</span>
+                  <span>K = Strike Price</span>
+                  <span>σ = Volatility</span>
+                  <span>T = Time to Expiry</span>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-concrete-gray uppercase tracking-wider">
+                Real-time IV pulled from futures chains
+              </p>
             </div>
+
+            {/* Logic 3: Arbitrage */}
+            <div className="bg-white border-2 border-black p-6 md:p-8 flex flex-col h-full">
+              <h3 className="text-lg md:text-xl font-bold uppercase tracking-tight mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-black text-white flex items-center justify-center font-mono text-sm border border-black">3</span>
+                Arbitrage Detection
+              </h3>
+              <p className="text-gray-600 text-sm mb-6 flex-grow">
+                Opportunities are ranked by Netback Analysis, comparing local sales vs. transport to other hubs.
+              </p>
+
+              <div className="bg-black p-4 border border-black mb-4 text-green-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-x-auto">
+                <p className="mb-2 text-gray-500 font-bold font-mono text-xs md:text-sm">// Netback Comparison Algorithm</p>
+                <div className="text-sm md:text-base">
+                  <BlockMath math="\text{Netback} = P_{hub} - C_{transport} - C_{tariffs}" />
+                </div>
+                <div className="h-px bg-gray-800 my-3"></div>
+                <p className="text-industrial-yellow font-bold font-mono text-xs md:text-sm">
+                  if (Gulf_Netback &gt; Local_Netback)<br />
+                  return &quot;Export Opportunity&quot;
+                </p>
+              </div>
+
+              <p className="text-[10px] text-concrete-gray uppercase tracking-wider">
+                Includes tariffs & terminal fees
+              </p>
+            </div>
+          </div>
+
+          {/* Beginner Guide Toggle */}
+          <div className="mt-12 text-center">
+            <button
+              onClick={() => setShowBeginnerGuide(!showBeginnerGuide)}
+              className="group inline-flex items-center gap-2 text-sm uppercase tracking-wider font-bold hover:bg-black hover:text-white transition-colors px-4 py-2 border-2 border-black border-dashed"
+            >
+              <span>{showBeginnerGuide ? "Hide Explanation" : "New to all this?"}</span>
+              <span className={`transition-transform duration-200 ${showBeginnerGuide ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            <p className="text-xs text-concrete-gray mt-2 cursor-pointer hover:underline" onClick={() => setShowBeginnerGuide(!showBeginnerGuide)}>
+              Click for a simple plain-English explanation
+            </p>
+          </div>
+
+          {/* Collapsible Beginner Guide */}
+          {showBeginnerGuide && (
+            <div className="mt-8 border-t-2 border-black bg-white animation-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-3 divide-y-2 md:divide-y-0 md:divide-x-2 divide-black border-2 border-t-0 border-black">
+                {/* Analogy 1 */}
+                <div className="p-6 md:p-8 bg-gray-50">
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg">The Coffee Shop Analogy</h4>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Quality Banks</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Imagine selling coffee beans. High-quality Arabica beans sell for more than generic Robusta.
+                    <strong> Quality Banks</strong> are just the price list that says &quot;If your beans are 5% better, we pay $0.50 more.&quot;
+                    We verify your oil&apos;s quality so you get paid for the premium stuff.
+                  </p>
+                </div>
+
+                {/* Analogy 2 */}
+                <div className="p-6 md:p-8 bg-gray-50">
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg">The Car Insurance Analogy</h4>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Option Pricing</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Hedging is just like buying insurance for your car. You pay a small monthly premium (the option price)
+                    so that if you crash (oil prices drop to zero), the insurance company pays you the full value of your car.
+                    We calculate exactly how much that &quot;premium&quot; should cost.
+                  </p>
+                </div>
+
+                {/* Analogy 3 */}
+                <div className="p-6 md:p-8 bg-gray-50">
+                  <h4 className="font-bold uppercase tracking-tight mb-3 text-lg">The &quot;Selling Online&quot; Analogy</h4>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Concept: Arbitrage</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Imagine you&apos;re selling a bike. In your town, it&apos;s worth $100. In the big city next door, it&apos;s worth $150.
+                    But it costs $20 in gas to drive there.
+                    <strong> Arbitrage</strong> is just the math: $150 - $20 (Gas) = $130.
+                    Since $130 &gt; $100, you drive to the city. We do this for your oil every day.
+                  </p>
+                </div>
+              </div>
+              <div className="p-4 bg-black text-white text-center border-l-2 border-r-2 border-b-2 border-black">
+                <p className="text-sm font-mono">Ready to use the pro tools?</p>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-12 text-center">
+            <Link href="/setup" className="inline-block">
+              <Button variant="primary" size="lg" className="border-2 border-black">
+                Explore The Models
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
