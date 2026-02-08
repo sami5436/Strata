@@ -25,108 +25,77 @@ interface PriceData {
 }
 
 let cache: CacheEntry | null = null;
-const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Mock data for development/demo when EIA API key is not configured
+ * Fetch live data from Yahoo Finance (no API key required)
+ * CL=F is WTI Crude, BZ=F is Brent Crude
  */
-function getMockData(): MarketData {
-    // Simulated realistic prices with slight randomization
-    const baseWti = 80.0 + (Math.random() - 0.5) * 2;
-    const baseBrent = baseWti + 3.5 + (Math.random() - 0.5);
-    const baseGasoline = 2.45 + (Math.random() - 0.5) * 0.1;
-    const baseDiesel = 2.78 + (Math.random() - 0.5) * 0.1;
-
-    return {
-        prices: {
-            wti: {
-                price: parseFloat(baseWti.toFixed(2)),
-                change: parseFloat((Math.random() * 2 - 1).toFixed(2)),
-                changePercent: parseFloat((Math.random() * 2 - 1).toFixed(2)),
-                unit: "$/bbl",
-            },
-            brent: {
-                price: parseFloat(baseBrent.toFixed(2)),
-                change: parseFloat((Math.random() * 2 - 1).toFixed(2)),
-                changePercent: parseFloat((Math.random() * 2 - 1).toFixed(2)),
-                unit: "$/bbl",
-            },
-            gasoline: {
-                price: parseFloat(baseGasoline.toFixed(3)),
-                change: parseFloat((Math.random() * 0.1 - 0.05).toFixed(3)),
-                changePercent: parseFloat((Math.random() * 4 - 2).toFixed(2)),
-                unit: "$/gal",
-            },
-            diesel: {
-                price: parseFloat(baseDiesel.toFixed(3)),
-                change: parseFloat((Math.random() * 0.1 - 0.05).toFixed(3)),
-                changePercent: parseFloat((Math.random() * 4 - 2).toFixed(2)),
-                unit: "$/gal",
-            },
-        },
-        fetchedAt: new Date().toISOString(),
-        source: "mock",
-    };
-}
-
-/**
- * Fetch live data from EIA API
- */
-async function fetchEIAData(apiKey: string): Promise<MarketData> {
-    const baseUrl = "https://api.eia.gov/v2/petroleum/pri/spt/data/";
-
-    // Fetch WTI and Brent crude prices
-    const crudeUrl = `${baseUrl}?api_key=${apiKey}&frequency=daily&data[0]=value&facets[series][]=RWTC&facets[series][]=RBRTE&sort[0][column]=period&sort[0][direction]=desc&length=2`;
+async function fetchYahooFinanceData(): Promise<MarketData> {
+    const symbols = ["CL=F", "BZ=F", "RB=F", "HO=F"]; // WTI, Brent, RBOB Gasoline, Heating Oil
 
     try {
-        const response = await fetch(crudeUrl, {
-            next: { revalidate: 900 }, // Next.js cache for 15 minutes
-        });
+        const results = await Promise.all(
+            symbols.map(async (symbol) => {
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=2d`;
+                const response = await fetch(url, {
+                    headers: {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    },
+                });
 
-        if (!response.ok) {
-            throw new Error(`EIA API responded with ${response.status}`);
-        }
+                if (!response.ok) {
+                    throw new Error(`Yahoo Finance API error for ${symbol}`);
+                }
 
-        const data = await response.json();
-        const records = data.response?.data || [];
+                const data = await response.json();
+                const result = data.chart?.result?.[0];
+                const quote = result?.indicators?.quote?.[0];
+                const meta = result?.meta;
 
-        // Parse WTI price
-        const wtiRecords = records.filter((r: Record<string, string>) => r.series === "RWTC");
-        const wtiLatest = wtiRecords[0]?.value ? parseFloat(wtiRecords[0].value) : 80.0;
-        const wtiPrevious = wtiRecords[1]?.value ? parseFloat(wtiRecords[1].value) : wtiLatest;
-        const wtiChange = wtiLatest - wtiPrevious;
+                const currentPrice = meta?.regularMarketPrice || quote?.close?.[quote.close.length - 1] || 0;
+                const previousClose = meta?.chartPreviousClose || meta?.previousClose || quote?.close?.[0] || currentPrice;
+                const change = currentPrice - previousClose;
+                const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
-        // Parse Brent price
-        const brentRecords = records.filter((r: Record<string, string>) => r.series === "RBRTE");
-        const brentLatest = brentRecords[0]?.value ? parseFloat(brentRecords[0].value) : 83.5;
-        const brentPrevious = brentRecords[1]?.value ? parseFloat(brentRecords[1].value) : brentLatest;
-        const brentChange = brentLatest - brentPrevious;
+                return {
+                    symbol,
+                    price: currentPrice,
+                    change,
+                    changePercent,
+                };
+            })
+        );
+
+        const wtiData = results.find(r => r.symbol === "CL=F");
+        const brentData = results.find(r => r.symbol === "BZ=F");
+        const gasData = results.find(r => r.symbol === "RB=F");
+        const dieselData = results.find(r => r.symbol === "HO=F");
 
         return {
             prices: {
                 wti: {
-                    price: wtiLatest,
-                    change: parseFloat(wtiChange.toFixed(2)),
-                    changePercent: parseFloat(((wtiChange / wtiPrevious) * 100).toFixed(2)),
+                    price: parseFloat((wtiData?.price || 71).toFixed(2)),
+                    change: parseFloat((wtiData?.change || 0).toFixed(2)),
+                    changePercent: parseFloat((wtiData?.changePercent || 0).toFixed(2)),
                     unit: "$/bbl",
                 },
                 brent: {
-                    price: brentLatest,
-                    change: parseFloat(brentChange.toFixed(2)),
-                    changePercent: parseFloat(((brentChange / brentPrevious) * 100).toFixed(2)),
+                    price: parseFloat((brentData?.price || 75).toFixed(2)),
+                    change: parseFloat((brentData?.change || 0).toFixed(2)),
+                    changePercent: parseFloat((brentData?.changePercent || 0).toFixed(2)),
                     unit: "$/bbl",
                 },
-                // For demo, use approximations for refined products
                 gasoline: {
-                    price: 2.45,
-                    change: 0.03,
-                    changePercent: 1.24,
+                    price: parseFloat((gasData?.price || 2.10).toFixed(3)),
+                    change: parseFloat((gasData?.change || 0).toFixed(3)),
+                    changePercent: parseFloat((gasData?.changePercent || 0).toFixed(2)),
                     unit: "$/gal",
                 },
                 diesel: {
-                    price: 2.78,
-                    change: -0.02,
-                    changePercent: -0.71,
+                    price: parseFloat((dieselData?.price || 2.25).toFixed(3)),
+                    change: parseFloat((dieselData?.change || 0).toFixed(3)),
+                    changePercent: parseFloat((dieselData?.changePercent || 0).toFixed(2)),
                     unit: "$/gal",
                 },
             },
@@ -134,9 +103,25 @@ async function fetchEIAData(apiKey: string): Promise<MarketData> {
             source: "live",
         };
     } catch (error) {
-        console.error("EIA API fetch error:", error);
+        console.error("Yahoo Finance fetch error:", error);
         throw error;
     }
+}
+
+/**
+ * Mock data for fallback
+ */
+function getMockData(): MarketData {
+    return {
+        prices: {
+            wti: { price: 71.50, change: 0.45, changePercent: 0.63, unit: "$/bbl" },
+            brent: { price: 75.20, change: 0.38, changePercent: 0.51, unit: "$/bbl" },
+            gasoline: { price: 2.10, change: 0.02, changePercent: 0.96, unit: "$/gal" },
+            diesel: { price: 2.25, change: -0.01, changePercent: -0.44, unit: "$/gal" },
+        },
+        fetchedAt: new Date().toISOString(),
+        source: "mock",
+    };
 }
 
 export async function GET() {
@@ -150,18 +135,8 @@ export async function GET() {
             });
         }
 
-        const apiKey = process.env.EIA_API_KEY;
-
-        let data: MarketData;
-
-        if (!apiKey || apiKey === "your_api_key_here") {
-            // Use mock data if no API key configured
-            console.log("EIA API key not configured, using mock data");
-            data = getMockData();
-        } else {
-            // Fetch live data
-            data = await fetchEIAData(apiKey);
-        }
+        // Fetch live data from Yahoo Finance
+        const data = await fetchYahooFinanceData();
 
         // Update cache
         cache = {
@@ -189,7 +164,7 @@ export async function GET() {
         // Fall back to mock data on error
         return NextResponse.json({
             ...getMockData(),
-            error: "Failed to fetch live data, showing demo data",
+            error: "Failed to fetch live data, showing fallback data",
         });
     }
 }
